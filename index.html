@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ॲग्री पार्टनर (AgriPartner Pro)</title>
+    <!-- Tailwind CSS for Professional Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts for Marathi -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Noto Sans Devanagari', sans-serif; background-color: #f3f4f6; }
+        .glass-panel { background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border-radius: 0.75rem; }
+        .sidebar-link { transition: all 0.3s; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: #e0f2fe; color: #0284c7; border-right: 4px solid #0284c7; }
+        /* Loader */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 bg-gradient-to-br from-green-600 to-teal-800 z-50 flex flex-col justify-center items-center">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center">
+            <div class="mb-4 text-green-600 text-5xl"><i class="fa-solid fa-leaf"></i></div>
+            <h2 class="text-2xl font-bold mb-2 text-gray-800">AgriPartner Pro</h2>
+            <p class="text-gray-500 mb-6 text-sm">प्रगत शेती व्यवस्थापन प्रणाली</p>
+            
+            <div class="text-left space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">भूमिका (Role)</label>
+                    <select id="userRole" class="w-full border-gray-300 border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none bg-gray-50">
+                        <option value="partner">भागीदार (Partner)</option>
+                        <option value="owner">मालक (Owner/Approver)</option>
+                        <option value="viewer">स्टेकहोल्डर (Viewer)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">पासवर्ड</label>
+                    <input type="password" id="password" class="w-full border-gray-300 border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none" placeholder="******">
+                </div>
+                <button onclick="login()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-lg">लॉग इन करा</button>
+                <p id="login-msg" class="text-red-500 text-xs text-center mt-2"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP DASHBOARD -->
+    <div id="app-container" class="flex h-screen hidden">
+        
+        <!-- Sidebar -->
+        <div class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col justify-between h-full">
+            <div>
+                <div class="p-6 flex items-center space-x-3 border-b">
+                    <i class="fa-solid fa-seedling text-green-600 text-2xl"></i>
+                    <span class="font-bold text-xl text-gray-700">AgriPartner</span>
+                </div>
+                <nav class="mt-6 space-y-1">
+                    <a href="#" onclick="switchTab('dashboard')" class="sidebar-link active flex items-center px-6 py-3 text-gray-600">
+                        <i class="fa-solid fa-chart-pie w-6"></i> डॅशबोर्ड
+                    </a>
+                    <a href="#" onclick="switchTab('income')" id="nav-income" class="sidebar-link flex items-center px-6 py-3 text-gray-600">
+                        <i class="fa-solid fa-sack-dollar w-6"></i> उत्पन्न जोडा (Income)
+                    </a>
+                    <a href="#" onclick="switchTab('expense')" id="nav-expense" class="sidebar-link flex items-center px-6 py-3 text-gray-600">
+                        <i class="fa-solid fa-file-invoice-dollar w-6"></i> खर्च मागणी (Expense)
+                    </a>
+                    <a href="#" onclick="switchTab('transactions')" class="sidebar-link flex items-center px-6 py-3 text-gray-600">
+                        <i class="fa-solid fa-list-check w-6"></i> व्यवहार यादी
+                    </a>
+                </nav>
+            </div>
+            <div class="p-4 border-t">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="bg-green-100 p-2 rounded-full text-green-600 font-bold" id="userAvatar">U</div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-700" id="userNameDisplay">User</p>
+                        <p class="text-xs text-gray-500" id="userRoleDisplay">Role</p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="w-full text-sm border border-red-200 text-red-500 hover:bg-red-50 py-2 rounded-lg">बाहेर पडा</button>
+            </div>
+        </div>
+
+        <!-- Mobile Header -->
+        <div class="md:hidden fixed top-0 w-full bg-white border-b z-20 flex justify-between items-center p-4 shadow-sm">
+            <span class="font-bold text-lg text-green-700"><i class="fa-solid fa-leaf"></i> AgriPro</span>
+            <button onclick="document.querySelector('.mobile-menu').classList.toggle('hidden')"><i class="fa-solid fa-bars text-gray-600 text-xl"></i></button>
+        </div>
+        <!-- Mobile Menu Dropdown -->
+        <div class="mobile-menu hidden fixed top-14 w-full bg-white shadow-lg z-10 border-b md:hidden">
+            <a onclick="switchTab('dashboard')" class="block p-4 border-b">डॅशबोर्ड</a>
+            <a onclick="switchTab('income')" class="block p-4 border-b">उत्पन्न</a>
+            <a onclick="switchTab('expense')" class="block p-4 border-b">खर्च</a>
+            <a onclick="switchTab('transactions')" class="block p-4 border-b">यादी</a>
+            <a onclick="logout()" class="block p-4 text-red-500">बाहेर पडा</a>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 mt-14 md:mt-0">
+            
+            <!-- SECTION 1: DASHBOARD -->
+            <div id="dashboard" class="section block space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">आर्थिक आढावा (Financial Overview)</h2>
+                    <button onclick="fetchData()" class="text-sm bg-white border px-3 py-1 rounded hover:bg-gray-50 shadow-sm"><i class="fa-solid fa-rotate"></i> रिफ्रेश</button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- Income -->
+                    <div class="glass-panel p-6 border-l-4 border-green-500">
+                        <p class="text-gray-500 text-sm font-semibold uppercase">एकूण उत्पन्न (Income)</p>
+                        <h3 class="text-3xl font-bold text-green-600 mt-2" id="totalIncome">₹0</h3>
+                    </div>
+                    <!-- Expense -->
+                    <div class="glass-panel p-6 border-l-4 border-red-500">
+                        <p class="text-gray-500 text-sm font-semibold uppercase">एकूण खर्च (Expense)</p>
+                        <h3 class="text-3xl font-bold text-red-600 mt-2" id="totalExpense">₹0</h3>
+                    </div>
+                    <!-- Profit -->
+                    <div class="glass-panel p-6 border-l-4 border-blue-500">
+                        <p class="text-gray-500 text-sm font-semibold uppercase">निव्वळ नफा (Net Profit)</p>
+                        <h3 class="text-3xl font-bold text-blue-600 mt-2" id="netProfit">₹0</h3>
+                    </div>
+                    <!-- Share -->
+                    <div class="glass-panel p-6 border-l-4 border-purple-500 bg-purple-50">
+                        <p class="text-purple-600 text-sm font-semibold uppercase">माझा ५०% वाटा</p>
+                        <h3 class="text-3xl font-bold text-purple-700 mt-2" id="myShare">₹0</h3>
+                    </div>
+                </div>
+
+                <!-- Charts Area -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel p-6">
+                        <h4 class="font-bold text-gray-700 mb-4">खर्च vs उत्पन्न</h4>
+                        <canvas id="profitChart"></canvas>
+                    </div>
+                    <div class="glass-panel p-6">
+                        <h4 class="font-bold text-gray-700 mb-4">खर्च वर्गवारी (Categories)</h4>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: ADD INCOME -->
+            <div id="income" class="section hidden max-w-2xl mx-auto">
+                <div class="glass-panel p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <span class="bg-green-100 text-green-600 p-2 rounded-lg"><i class="fa-solid fa-arrow-trend-up"></i></span>
+                        नवीन उत्पन्न जमा करा
+                    </h3>
+                    <form onsubmit="submitTransaction(event, 'Income')" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">तारीख</label>
+                                <input type="date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-green-500 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">रक्कम (₹)</label>
+                                <input type="number" name="amount" required class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-green-500 focus:ring-green-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">उत्पन्नाचा स्रोत (Title)</label>
+                            <input type="text" name="title" placeholder="उदा. ऊस बिल, भाजी विक्री" required class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">प्रकार (Category)</label>
+                            <select name="category" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm">
+                                <option>पीक विक्री (Crop Sale)</option>
+                                <option>सबसिडी (Subsidy)</option>
+                                <option>इतर (Other)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">नोट्स</label>
+                            <textarea name="notes" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm"></textarea>
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none">
+                            उत्पन्न जमा करा
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- SECTION 3: ADD EXPENSE -->
+            <div id="expense" class="section hidden max-w-2xl mx-auto">
+                <div class="glass-panel p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <span class="bg-red-100 text-red-600 p-2 rounded-lg"><i class="fa-solid fa-arrow-trend-down"></i></span>
+                        नवीन खर्च मागणी
+                    </h3>
+                    <form onsubmit="submitTransaction(event, 'Expense')" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">तारीख</label>
+                                <input type="date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-red-500 focus:ring-red-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">अंदाजित रक्कम (₹)</label>
+                                <input type="number" name="amount" required class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-red-500 focus:ring-red-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">खर्चाचे कारण (Title)</label>
+                            <input type="text" name="title" placeholder="उदा. मजूर पगार" required class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">वर्गवारी (Category)</label>
+                            <select name="category" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm">
+                                <option value="Labour">मजूर (Labour)</option>
+                                <option value="Seeds">बियाणे (Seeds)</option>
+                                <option value="Fertilizers">खते/औषधे</option>
+                                <option value="Equipment">यंत्रसामग्री/भाडे</option>
+                                <option value="Electricity">वीज/पाणी</option>
+                                <option value="Transport">वाहतूक</option>
+                                <option value="Other">इतर</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">सविस्तर माहिती</label>
+                            <textarea name="notes" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm"></textarea>
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none">
+                            खर्च मागणी पाठवा
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- SECTION 4: TRANSACTIONS LIST -->
+            <div id="transactions" class="section hidden">
+                <div class="glass-panel p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">सर्व व्यवहार (Transactions)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">तारीख</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">तपशील</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">प्रकार</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">रक्कम</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">स्थिती</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">कृती (Action)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Data will be injected here -->
+                            </tbody>
+                        </table>
+                        <div id="loader" class="text-center py-4 hidden"><div class="loader"></div></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx627qaLdogQzaKjUe61AXOaDnzis5t8BNN0goDRcfOShi4aBdPfgzFYOpy6C24sQ/exec"; 
+
+        // STATE
+        let currentUser = { role: '', name: '' };
+        let allData = [];
+        let charts = {};
+
+        // LOGIN SYSTEM
+        function login() {
+            const role = document.getElementById('userRole').value;
+            const pass = document.getElementById('password').value;
+            const msg = document.getElementById('login-msg');
+
+            const creds = { 'partner': 'partner123', 'owner': 'admin123', 'viewer': 'view123' };
+            const names = { 'partner': 'Partner One', 'owner': 'Main Owner', 'viewer': 'Stakeholder' };
+
+            if (pass === creds[role]) {
+                currentUser = { role: role, name: names[role] };
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                
+                // UI Updates
+                document.getElementById('userNameDisplay').innerText = currentUser.name;
+                document.getElementById('userRoleDisplay').innerText = role.toUpperCase();
+                document.getElementById('userAvatar').innerText = currentUser.name.charAt(0);
+
+                if (role === 'viewer') {
+                    document.getElementById('nav-expense').style.display = 'none';
+                    document.getElementById('nav-income').style.display = 'none';
+                }
+                
+                fetchData();
+            } else {
+                msg.innerText = "पासवर्ड चुकीचा आहे!";
+            }
+        }
+
+        function logout() { location.reload(); }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Highlight Menu
+            const linkMap = { 'dashboard':0, 'income':1, 'expense':2, 'transactions':3 };
+            const links = document.querySelectorAll('.sidebar-link');
+            if(links[linkMap[tabId]]) links[linkMap[tabId]].classList.add('active');
+            
+            // Close mobile menu if open
+            document.querySelector('.mobile-menu').classList.add('hidden');
+        }
+
+        // API CALLS
+        async function fetchData() {
+            document.getElementById('loader').classList.remove('hidden');
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
+                allData = data;
+                renderDashboard();
+                renderTable();
+            } catch (error) {
+                console.error("Error:", error);
+                alert("डेटा लोड करण्यास समस्या आली.");
+            } finally {
+                document.getElementById('loader').classList.add('hidden');
+            }
+        }
+
+        function submitTransaction(e, type) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "प्रोसेसिंग...";
+            btn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const params = new URLSearchParams();
+            params.append('action', 'add');
+            params.append('type', type);
+            params.append('user', currentUser.role);
+            for (const pair of formData) { params.append(pair[0], pair[1]); }
+
+            fetch(SCRIPT_URL, { method: 'POST', body: params })
+                .then(res => res.json())
+                .then(data => {
+                    alert((type === 'Income' ? 'उत्पन्न' : 'खर्च') + " यशस्वीरित्या जोडले!");
+                    e.target.reset();
+                    fetchData();
+                    switchTab('transactions');
+                })
+                .catch(err => alert("Error submitting data"))
+                .finally(() => {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                });
+        }
+
+        function updateStatus(id, newStatus, currentAmt) {
+            if (currentUser.role !== 'owner') return alert("Access Denied");
+            
+            let amount = currentAmt;
+            if (newStatus === 'Approved') {
+                const edit = prompt("मंजूर रक्कम (Confirm Amount):", currentAmt);
+                if (edit === null) return;
+                amount = edit;
+            }
+
+            const params = new URLSearchParams();
+            params.append('action', 'update');
+            params.append('id', id);
+            params.append('status', newStatus);
+            params.append('amount', amount);
+
+            fetch(SCRIPT_URL, { method: 'POST', body: params })
+                .then(() => { alert("Updated!"); fetchData(); });
+        }
+
+        // RENDER LOGIC
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            [...allData].reverse().forEach(item => {
+                const isInc = item.Type === 'Income';
+                const colorClass = isInc ? 'text-green-600' : 'text-red-600';
+                const sign = isInc ? '+' : '-';
+                
+                // Badge Logic
+                let statusBadge = '';
+                if(item.Status === 'Pending') statusBadge = '<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>';
+                else if(item.Status === 'Approved') statusBadge = '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Approved</span>';
+                else statusBadge = '<span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Rejected</span>';
+
+                // Action Buttons (Only for Owner & Pending Expense)
+                let actions = '-';
+                if(currentUser.role === 'owner' && item.Status === 'Pending') {
+                    actions = `
+                        <button onclick="updateStatus('${item.ID}', 'Approved', '${item.Amount}')" class="text-green-600 hover:text-green-900 mr-2"><i class="fa-solid fa-check"></i></button>
+                        <button onclick="updateStatus('${item.ID}', 'Rejected', '${item.Amount}')" class="text-red-600 hover:text-red-900"><i class="fa-solid fa-xmark"></i></button>
+                    `;
+                }
+
+                const date = new Date(item.Date).toLocaleDateString('en-IN');
+
+                const row = `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                            ${item.Title} <br><span class="text-xs text-gray-400 font-normal">${item.Category}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${isInc ? 'उत्पन्न' : 'खर्च'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold ${colorClass}">${sign}₹${item.Amount}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actions}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function renderDashboard() {
+            let income = 0, expense = 0, categories = {};
+
+            allData.forEach(item => {
+                if(item.Status === 'Approved') {
+                    const amt = parseFloat(item.Amount);
+                    if(item.Type === 'Income') {
+                        income += amt;
+                    } else {
+                        expense += amt;
+                        categories[item.Category] = (categories[item.Category] || 0) + amt;
+                    }
+                }
+            });
+
+            const profit = income - expense;
+            const share = profit > 0 ? profit / 2 : 0; // Negative profit means 0 share or loss share
+
+            // Update DOM
+            document.getElementById('totalIncome').innerText = '₹' + income.toLocaleString('en-IN');
+            document.getElementById('totalExpense').innerText = '₹' + expense.toLocaleString('en-IN');
+            
+            const profitEl = document.getElementById('netProfit');
+            profitEl.innerText = '₹' + profit.toLocaleString('en-IN');
+            profitEl.className = `text-3xl font-bold mt-2 ${profit >= 0 ? 'text-blue-600' : 'text-red-600'}`;
+            
+            document.getElementById('myShare').innerText = '₹' + share.toLocaleString('en-IN');
+
+            // Charts
+            renderCharts(income, expense, categories);
+        }
+
+        function renderCharts(income, expense, catData) {
+            // Profit Chart
+            const ctx1 = document.getElementById('profitChart').getContext('2d');
+            if(charts.profit) charts.profit.destroy();
+            charts.profit = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['उत्पन्न (Income)', 'खर्च (Expense)'],
+                    datasets: [{
+                        data: [income, expense],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Category Chart
+            const ctx2 = document.getElementById('categoryChart').getContext('2d');
+            if(charts.category) charts.category.destroy();
+            charts.category = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(catData),
+                    datasets: [{
+                        label: 'खर्च',
+                        data: Object.values(catData),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }]
+                },
+                options: { 
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
