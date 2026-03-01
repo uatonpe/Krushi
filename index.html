@@ -1,15 +1,33 @@
+<!-- 
+    AGRIPARTNER PRO - ADVANCED FARM MANAGEMENT SYSTEM
+    Updated: March 01, 2026
+    Features: 
+    - Role Based Login (Owner, Accountant, Field User)
+    - Income/Expense Tracking
+    - WhatsApp Integration for Rishikesh (+91 8329597119)
+    - Marathi Interface
+-->
 <!DOCTYPE html>
 <html lang="mr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AgriPartner Pro</title>
+    <title>AgriPartner Pro - Farm Management</title>
     
     <!-- LIBRARIES -->
+    <!-- Tailwind CSS for Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- SUPER POPUPS -->
+    
+    <!-- SweetAlert2 for Beautiful Popups -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- FontAwesome for Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts (Marathi Support) -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- CUSTOM CONFIG FOR TAILWIND -->
@@ -23,15 +41,24 @@
                             100: '#dcfce7',
                             500: '#22c55e',
                             600: '#16a34a',
+                            700: '#15803d',
                             800: '#166534',
                             900: '#14532d', // Deep Farm Green
                         },
                         accent: {
                             500: '#f59e0b', // Gold for Money
+                            600: '#d97706',
+                        },
+                        whatsapp: {
+                            500: '#25D366',
+                            600: '#128C7E'
                         }
                     },
                     fontFamily: {
                         sans: ['Poppins', 'Noto Sans Devanagari', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
                     }
                 }
             }
@@ -39,136 +66,237 @@
     </script>
 
     <style>
-        /* Custom Styles for "Pro" Look */
-        body { background: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+        /* =========================================
+           CUSTOM CSS STYLES
+           ========================================= */
+        
+        /* Base Settings */
+        body { 
+            background: #f3f4f6; 
+            -webkit-tap-highlight-color: transparent; 
+            overflow-x: hidden;
+        }
         
         /* Glassmorphism Cards */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border-radius: 1rem;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        .glass-card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+        }
 
-        /* Login Background */
+        /* Login Background Animation */
         .login-bg {
-            background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+            background: linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%);
             position: relative;
             overflow: hidden;
         }
+        
         .login-bg::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-            animation: rotate 20s linear infinite;
+            content: ''; 
+            position: absolute; 
+            top: -50%; 
+            left: -50%; 
+            width: 200%; 
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+            animation: rotate 25s linear infinite;
         }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        @keyframes rotate { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
 
-        /* Nav Active State */
-        .nav-item.active { color: #166534; font-weight: 700; position: relative; }
+        /* Navigation Active State */
+        .nav-item.active { 
+            color: #166534; 
+            font-weight: 700; 
+            position: relative; 
+        }
+        
         .nav-item.active::after {
-            content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
-            width: 6px; height: 6px; background: #166534; border-radius: 50%;
+            content: ''; 
+            position: absolute; 
+            bottom: -4px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            width: 6px; 
+            height: 6px; 
+            background: #166534; 
+            border-radius: 50%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        /* Desktop Nav Button Active */
+        .nav-btn.active {
+            background-color: #f0fdf4;
+            color: #15803d;
+            border-right: 4px solid #16a34a;
         }
 
         /* Loading Spinner */
-        .loader-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .spinner { width: 50px; height: 50px; border: 5px solid #dcfce7; border-top: 5px solid #166534; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loader-overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(255,255,255,0.85); 
+            z-index: 9999; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            backdrop-filter: blur(8px); 
+        }
+        
+        .spinner { 
+            width: 50px; 
+            height: 50px; 
+            border: 5px solid #dcfce7; 
+            border-top: 5px solid #166534; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+        }
+        
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Animation Utilities */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        
+        /* Button Press Effect */
+        .btn-press:active { transform: scale(0.97); }
+
     </style>
 </head>
-<body class="text-slate-800 h-screen overflow-hidden flex flex-col">
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col font-sans">
 
-    <!-- LOADER -->
+    <!-- =========================================
+         LOADER COMPONENT
+         ========================================= -->
     <div id="loader" class="loader-overlay hidden">
         <div class="flex flex-col items-center">
             <div class="spinner"></div>
-            <p class="mt-4 text-brand-900 font-bold animate-pulse">डेटा लोड होत आहे...</p>
+            <p class="mt-4 text-brand-900 font-bold animate-pulse text-lg">प्रक्रिया सुरू आहे...</p>
+            <p class="text-xs text-slate-500 mt-2">कृपया प्रतीक्षा करा</p>
         </div>
     </div>
 
-    <!-- LOGIN SCREEN -->
+    <!-- =========================================
+         LOGIN SCREEN
+         ========================================= -->
     <div id="login-screen" class="fixed inset-0 login-bg z-50 flex flex-col justify-center items-center p-6">
-        <div class="glass-card p-8 w-full max-w-sm text-center shadow-2xl animate__animated animate__fadeInUp">
-            <div class="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <i class="fa-solid fa-leaf text-4xl text-brand-800"></i>
+        <div class="glass-card p-8 w-full max-w-sm text-center shadow-2xl animate-fade-in relative z-10">
+            <!-- Logo -->
+            <div class="w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-brand-100/50">
+                <i class="fa-solid fa-leaf text-5xl text-brand-700"></i>
             </div>
-            <h1 class="text-3xl font-bold text-brand-900 mb-2">TodkarFarms</h1>
-            <p class="text-slate-500 text-sm mb-8">प्रगत शेती व्यवस्थापन प्रणाली</p>
             
-            <div class="space-y-4 text-left">
+            <h1 class="text-3xl font-bold text-brand-900 mb-1">Todkar Farms</h1>
+            <p class="text-slate-500 text-sm mb-8 font-medium">Smart Farming Solution</p>
+            
+            <!-- Login Form -->
+            <div class="space-y-5 text-left">
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">तुमची भूमिका (Role)</label>
-                    <div class="relative mt-1">
-                        <i class="fa-solid fa-user absolute left-3 top-3 text-slate-400"></i>
-                        <select id="userRole" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none appearance-none transition">
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1 tracking-wider">तुमची भूमिका (Role)</label>
+                    <div class="relative mt-1.5">
+                        <i class="fa-solid fa-user-tag absolute left-4 top-3.5 text-slate-400"></i>
+                        <select id="userRole" class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none appearance-none transition shadow-sm text-sm font-medium">
                             <option value="field_user">शेत कामगार (Field User)</option>
                             <option value="accountant">अकाउंटंट (Office)</option>
                             <option value="owner">मालक (Owner)</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-400 text-xs"></i>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-slate-400 text-xs pointer-events-none"></i>
                     </div>
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">पासवर्ड</label>
-                    <div class="relative mt-1">
-                        <i class="fa-solid fa-lock absolute left-3 top-3 text-slate-400"></i>
-                        <input type="password" id="password" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="******">
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1 tracking-wider">पासवर्ड</label>
+                    <div class="relative mt-1.5">
+                        <i class="fa-solid fa-lock absolute left-4 top-3.5 text-slate-400"></i>
+                        <input type="password" id="password" class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition shadow-sm text-sm font-medium" placeholder="पासवर्ड टाका">
                     </div>
                 </div>
-                <button onclick="login()" class="w-full bg-brand-600 hover:bg-brand-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] active:scale-95">
-                    लॉग इन करा
+                <button onclick="login()" class="w-full bg-gradient-to-r from-brand-600 to-brand-800 hover:from-brand-700 hover:to-brand-900 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-brand-500/30 transition transform hover:-translate-y-1 active:scale-95 text-sm uppercase tracking-wide">
+                    लॉग इन करा <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
             </div>
-            <p class="mt-6 text-xs text-slate-400">Sys By Umesh Tonpe</p>
+            <p class="mt-8 text-[10px] text-slate-400 font-mono">System v3.0 | By Umesh Tonpe</p>
         </div>
     </div>
 
-    <!-- MAIN APP LAYOUT -->
+    <!-- =========================================
+         MAIN APP CONTAINER
+         ========================================= -->
     <div id="app-container" class="flex-1 flex flex-col md:flex-row h-full hidden overflow-hidden">
         
         <!-- SIDEBAR (DESKTOP) -->
         <div class="hidden md:flex flex-col w-72 bg-white border-r border-slate-200 shadow-xl z-20">
-            <div class="p-8 border-b border-slate-100 flex items-center gap-3">
-                <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg">
-                    <i class="fa-solid fa-leaf"></i>
+            <div class="p-8 border-b border-slate-100 flex items-center gap-3 bg-slate-50/50">
+                <div class="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center text-white shadow-lg">
+                    <i class="fa-solid fa-seedling"></i>
                 </div>
-                <span class="font-bold text-xl text-slate-800 tracking-tight">AgriPartner</span>
+                <div>
+                    <span class="font-bold text-xl text-slate-800 tracking-tight block leading-tight">AgriPartner</span>
+                    <span class="text-[10px] text-brand-600 font-bold uppercase tracking-widest">Pro Version</span>
+                </div>
             </div>
+            
             <div class="p-4 flex-1 overflow-y-auto">
-                <p class="px-4 text-xs font-bold text-slate-400 uppercase mb-2">MENU</p>
-                <nav class="space-y-1">
+                <p class="px-4 text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest">Navigation</p>
+                <nav class="space-y-2">
                     <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-brand-50 hover:text-brand-700 transition flex items-center gap-3 nav-btn active" data-target="dashboard">
-                        <i class="fa-solid fa-chart-pie w-6"></i> डॅशबोर्ड
+                        <i class="fa-solid fa-chart-pie w-5 text-center"></i> 
+                        <span class="font-medium">डॅशबोर्ड</span>
                     </button>
                     <button onclick="switchTab('transactions')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-brand-50 hover:text-brand-700 transition flex items-center gap-3 nav-btn" data-target="transactions">
-                        <i class="fa-solid fa-list-check w-6"></i> व्यवहार यादी
+                        <i class="fa-solid fa-list-check w-5 text-center"></i> 
+                        <span class="font-medium">व्यवहार यादी</span>
                     </button>
-                    <button onclick="openTransactionModal('Income')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-brand-50 hover:text-brand-700 transition flex items-center gap-3">
-                        <i class="fa-solid fa-circle-plus text-green-500 w-6"></i> उत्पन्न जमा (Income)
+                    
+                    <div class="my-4 border-t border-slate-100"></div>
+                    <p class="px-4 text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Actions</p>
+
+                    <button onclick="openTransactionModal('Income')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-green-50 hover:text-green-700 transition flex items-center gap-3 group">
+                        <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition">
+                            <i class="fa-solid fa-plus text-green-600 text-xs"></i>
+                        </div>
+                        <span class="font-medium">उत्पन्न जमा (Income)</span>
                     </button>
-                    <button onclick="openTransactionModal('Expense')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-brand-50 hover:text-brand-700 transition flex items-center gap-3">
-                        <i class="fa-solid fa-circle-minus text-red-500 w-6"></i> खर्च मागणी (Expense)
+                    <button onclick="openTransactionModal('Expense')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-700 transition flex items-center gap-3 group">
+                        <div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition">
+                            <i class="fa-solid fa-minus text-red-600 text-xs"></i>
+                        </div>
+                        <span class="font-medium">खर्च मागणी (Expense)</span>
                     </button>
                 </nav>
             </div>
+            
             <div class="p-4 bg-slate-50 border-t border-slate-200">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold" id="avatar">U</div>
+                <div class="flex items-center gap-3 mb-4 p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold border-2 border-brand-200" id="avatar">U</div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-bold text-slate-900 truncate" id="userName">User Name</p>
-                        <p class="text-xs text-slate-500 truncate" id="userRoleDisplay">Role</p>
+                        <p class="text-[10px] text-slate-500 truncate uppercase font-bold" id="userRoleDisplay">Role</p>
                     </div>
                 </div>
-                <button onclick="location.reload()" class="w-full py-2 text-xs font-bold text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition">Log Out</button>
+                <button onclick="location.reload()" class="w-full py-2.5 text-xs font-bold text-red-500 border border-red-200 bg-white rounded-lg hover:bg-red-50 hover:text-red-700 transition shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket"></i> Log Out
+                </button>
             </div>
         </div>
 
@@ -176,54 +304,79 @@
         <div class="flex-1 flex flex-col bg-slate-50 h-full relative overflow-hidden">
             
             <!-- HEADER (MOBILE ONLY) -->
-            <div class="md:hidden bg-white px-4 py-3 border-b flex justify-between items-center shadow-sm z-20">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-leaf text-brand-600 text-xl"></i>
-                    <span class="font-bold text-lg">AgriPartner</span>
+            <div class="md:hidden bg-white px-4 py-3 border-b border-slate-200 flex justify-between items-center shadow-sm z-20 sticky top-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+                        <i class="fa-solid fa-leaf text-sm"></i>
+                    </div>
+                    <span class="font-bold text-lg text-slate-800">TodkarFarms</span>
                 </div>
-                <button onclick="location.reload()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-power-off"></i></button>
+                <button onclick="location.reload()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition">
+                    <i class="fa-solid fa-power-off text-sm"></i>
+                </button>
             </div>
 
             <!-- SCROLLABLE CONTENT -->
-            <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-28 md:pb-8 scroll-smooth" id="content-area">
                 
                 <!-- SECTION: DASHBOARD -->
-                <div id="dashboard" class="section space-y-6">
+                <div id="dashboard" class="section space-y-6 animate-fade-in">
                     <!-- Top Bar -->
-                    <div class="flex justify-between items-end">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-800">नमस्ते! <span id="dashName" class="text-brand-600">User</span></h2>
-                            <p class="text-slate-500 text-sm">आजची आर्थिक स्थिती</p>
+                            <h2 class="text-2xl font-bold text-slate-800">नमस्ते, <span id="dashName" class="text-brand-600">User</span> <i class="fa-solid fa-hand-sparkles text-yellow-400 ml-1"></i></h2>
+                            <p class="text-slate-500 text-sm mt-1">आजची शेतीची आर्थिक स्थिती</p>
                         </div>
-                        <button onclick="fetchData()" class="bg-white p-2 rounded-full shadow-md text-brand-600 hover:rotate-180 transition duration-500"><i class="fa-solid fa-rotate"></i></button>
+                        <button onclick="fetchData()" class="bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200 text-brand-600 text-sm font-bold hover:bg-brand-50 transition flex items-center gap-2 self-start md:self-auto btn-press">
+                            <i class="fa-solid fa-rotate"></i> रिफ्रेश करा
+                        </button>
                     </div>
 
                     <!-- Stats Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <!-- Income -->
-                        <div class="glass-card p-6 relative overflow-hidden">
-                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-100 rounded-full opacity-50"></div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">एकूण जमा (Income)</p>
-                            <h3 class="text-3xl font-bold text-slate-800 mt-2" id="totalIncome">₹0</h3>
-                            <div class="mt-4 flex items-center text-xs text-green-600 font-bold">
-                                <i class="fa-solid fa-arrow-trend-up mr-1"></i> विक्री व इतर
+                        <div class="glass-card p-6 relative overflow-hidden group">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-100 rounded-full opacity-50 group-hover:scale-110 transition duration-500"></div>
+                            <div class="flex justify-between items-start relative z-10">
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">एकूण जमा (Income)</p>
+                                    <h3 class="text-3xl font-bold text-slate-800 mt-2 tracking-tight" id="totalIncome">₹0</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center shadow-sm">
+                                    <i class="fa-solid fa-sack-dollar"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center text-xs text-green-600 font-bold bg-green-50 w-max px-2 py-1 rounded">
+                                <i class="fa-solid fa-arrow-trend-up mr-1.5"></i> विक्री व इतर
                             </div>
                         </div>
+
                         <!-- Expense -->
-                        <div class="glass-card p-6 relative overflow-hidden">
-                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-100 rounded-full opacity-50"></div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">मंजूर खर्च (Approved)</p>
-                            <h3 class="text-3xl font-bold text-slate-800 mt-2" id="totalExpense">₹0</h3>
-                            <div class="mt-4 flex items-center text-xs text-red-500 font-bold">
-                                <i class="fa-solid fa-arrow-trend-down mr-1"></i> शेती खर्च
+                        <div class="glass-card p-6 relative overflow-hidden group">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-100 rounded-full opacity-50 group-hover:scale-110 transition duration-500"></div>
+                            <div class="flex justify-between items-start relative z-10">
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">मंजूर खर्च (Approved)</p>
+                                    <h3 class="text-3xl font-bold text-slate-800 mt-2 tracking-tight" id="totalExpense">₹0</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center shadow-sm">
+                                    <i class="fa-solid fa-money-bill-wave"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center text-xs text-red-500 font-bold bg-red-50 w-max px-2 py-1 rounded">
+                                <i class="fa-solid fa-arrow-trend-down mr-1.5"></i> शेती खर्च
                             </div>
                         </div>
+
                         <!-- Balance -->
-                        <div class="glass-card p-6 bg-gradient-to-br from-brand-600 to-brand-800 text-white shadow-brand-500/30 shadow-xl">
-                            <p class="text-xs font-bold text-brand-100 uppercase tracking-wider">शिल्लक नफा</p>
-                            <h3 class="text-3xl font-bold mt-2" id="netBalance">₹0</h3>
-                            <div class="mt-4 flex items-center text-xs text-brand-100">
-                                <i class="fa-solid fa-wallet mr-1"></i> कॅश इन हँड
+                        <div class="glass-card p-6 bg-gradient-to-br from-brand-600 to-brand-800 text-white shadow-lg shadow-brand-500/20 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                            <div class="relative z-10">
+                                <p class="text-[11px] font-bold text-brand-200 uppercase tracking-wider">शिल्लक नफा (Balance)</p>
+                                <h3 class="text-3xl font-bold mt-2 tracking-tight" id="netBalance">₹0</h3>
+                                <div class="mt-4 flex items-center text-xs text-brand-100 bg-brand-700/50 w-max px-2 py-1 rounded backdrop-blur-sm border border-brand-500">
+                                    <i class="fa-solid fa-wallet mr-1.5"></i> कॅश इन हँड
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -231,46 +384,64 @@
                     <!-- Chart & Recent Activity -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="glass-card p-6">
-                            <h4 class="font-bold text-slate-700 mb-4">खर्च vs उत्पन्न</h4>
+                            <h4 class="font-bold text-slate-700 mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-brand-500"></i> खर्च vs उत्पन्न
+                            </h4>
                             <div class="h-64 flex justify-center">
                                 <canvas id="financeChart"></canvas>
                             </div>
                         </div>
-                        <div class="glass-card p-6">
-                            <h4 class="font-bold text-slate-700 mb-4">प्रलंबित मागण्या (Pending)</h4>
-                            <div id="pendingList" class="space-y-3 overflow-y-auto max-h-64">
+                        <div class="glass-card p-6 flex flex-col">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-slate-700 flex items-center gap-2">
+                                    <i class="fa-solid fa-clock-rotate-left text-accent-500"></i> प्रलंबित मागण्या (Pending)
+                                </h4>
+                                <span class="text-xs font-bold px-2 py-1 bg-slate-100 rounded-full text-slate-500" id="pendingCount">0</span>
+                            </div>
+                            <div id="pendingList" class="space-y-3 overflow-y-auto max-h-64 pr-2 custom-scrollbar flex-1">
                                 <!-- Pending Items injected here -->
-                                <p class="text-slate-400 text-sm text-center italic">कोणतीही प्रलंबित मागणी नाही.</p>
+                                <div class="flex flex-col items-center justify-center h-40 text-slate-400">
+                                    <i class="fa-regular fa-clipboard text-4xl mb-2 opacity-50"></i>
+                                    <p class="text-sm">कोणतीही प्रलंबित मागणी नाही.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- SECTION: TRANSACTIONS LIST -->
-                <div id="transactions" class="section hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-2xl font-bold text-slate-800">व्यवहार यादी</h2>
-                        <div class="flex gap-2">
-                             <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterTable()" class="px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <div id="transactions" class="section hidden space-y-6 animate-fade-in">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h2 class="text-2xl font-bold text-slate-800 w-full md:w-auto">व्यवहार यादी</h2>
+                        <div class="relative w-full md:w-72">
+                             <i class="fa-solid fa-search absolute left-3 top-3.5 text-slate-400 text-sm"></i>
+                             <input type="text" id="searchInput" placeholder="शोधा (नाव, कारण...)" onkeyup="filterTable()" class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm">
                         </div>
                     </div>
 
-                    <div class="glass-card overflow-hidden">
+                    <div class="glass-card overflow-hidden border border-slate-200 shadow-md rounded-xl">
                         <div class="overflow-x-auto">
                             <table class="w-full">
                                 <thead class="bg-slate-50 border-b border-slate-200">
                                     <tr>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">तारीख/User</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">तपशील</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">रक्कम</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">स्थिती</th>
-                                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase">कृती</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">तारीख / User</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">तपशील (Details)</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">रक्कम</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">स्थिती</th>
+                                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">कृती (Action)</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tableBody" class="divide-y divide-slate-100">
+                                <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
                                     <!-- Rows go here -->
                                 </tbody>
                             </table>
+                        </div>
+                        <!-- Empty State for Table -->
+                        <div id="emptyState" class="hidden py-12 text-center">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa-solid fa-inbox text-2xl text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium">माहिती उपलब्ध नाही</p>
                         </div>
                     </div>
                 </div>
@@ -278,20 +449,20 @@
             </div>
 
             <!-- MOBILE BOTTOM NAV -->
-            <div class="md:hidden fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-around py-3 px-2 z-30 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
-                <button onclick="switchTab('dashboard')" class="nav-item active flex flex-col items-center text-slate-400 hover:text-brand-600 transition" data-target="dashboard">
+            <div class="md:hidden fixed bottom-0 w-full bg-white/90 backdrop-blur-md border-t border-slate-200 flex justify-around py-2 px-2 z-30 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-safe">
+                <button onclick="switchTab('dashboard')" class="nav-item active flex flex-col items-center justify-center w-16 h-14 text-slate-400 hover:text-brand-600 transition rounded-xl" data-target="dashboard">
                     <i class="fa-solid fa-house text-xl mb-1"></i>
                     <span class="text-[10px] font-medium">Home</span>
                 </button>
                 
                 <!-- Floating Action Button Center -->
                 <div class="relative -top-8">
-                    <button onclick="showActionSheet()" class="w-14 h-14 bg-gradient-to-tr from-brand-500 to-brand-700 rounded-full text-white shadow-lg shadow-brand-500/40 flex items-center justify-center transform transition active:scale-95">
+                    <button onclick="showActionSheet()" class="w-16 h-16 bg-gradient-to-tr from-brand-500 to-brand-700 rounded-full text-white shadow-lg shadow-brand-500/40 flex items-center justify-center transform transition active:scale-95 border-4 border-slate-50">
                         <i class="fa-solid fa-plus text-2xl"></i>
                     </button>
                 </div>
 
-                <button onclick="switchTab('transactions')" class="nav-item flex flex-col items-center text-slate-400 hover:text-brand-600 transition" data-target="transactions">
+                <button onclick="switchTab('transactions')" class="nav-item flex flex-col items-center justify-center w-16 h-14 text-slate-400 hover:text-brand-600 transition rounded-xl" data-target="transactions">
                     <i class="fa-solid fa-list-ul text-xl mb-1"></i>
                     <span class="text-[10px] font-medium">History</span>
                 </button>
@@ -300,12 +471,18 @@
         </div>
     </div>
 
+    <!-- =========================================
+         JAVASCRIPT LOGIC
+         ========================================= -->
     <script>
         // ==========================================
-        // CONFIG & STATE
+        // 1. CONFIGURATION
         // ==========================================
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwubIyvlWSpWy2_m28xbeEJP46iaxCIQh-ke_e1_2MuyQ67ZXfepVg0z3BzvpkTM-c/exec"; // ★ इथे तुमचा URL टाका ★
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwubIyvlWSpWy2_m28xbeEJP46iaxCIQh-ke_e1_2MuyQ67ZXfepVg0z3BzvpkTM-c/exec"; 
         
+        // WhatsApp Configuration
+        const RISHIKESH_PHONE = "918329597119"; // ऋषीकेश यांचा नंबर
+
         let currentState = {
             user: { role: '', name: '' },
             data: [],
@@ -313,15 +490,20 @@
         };
 
         // ==========================================
-        // AUTHENTICATION
+        // 2. AUTHENTICATION & INITIALIZATION
         // ==========================================
         function login() {
             const role = document.getElementById('userRole').value;
             const pass = document.getElementById('password').value;
             
+            // Simple hardcoded password (Production apps should use secure auth)
             if(pass === '12345678') {
                 currentState.user.role = role;
-                const names = { 'field_user': 'शेत कामगार', 'accountant': 'अकाउंटंट', 'owner': 'मालक' };
+                const names = { 
+                    'field_user': 'शेत कामगार', 
+                    'accountant': 'अकाउंटंट', 
+                    'owner': 'मालक' 
+                };
                 currentState.user.name = names[role];
                 
                 // UI Update
@@ -331,46 +513,72 @@
                 document.getElementById('userRoleDisplay').innerText = role.toUpperCase();
                 
                 // Animation Out
-                document.getElementById('login-screen').classList.add('animate__animated', 'animate__fadeOutUp');
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.style.opacity = '0';
+                loginScreen.style.transition = 'opacity 0.5s ease';
+                
                 setTimeout(() => {
-                    document.getElementById('login-screen').classList.add('hidden');
+                    loginScreen.classList.add('hidden');
                     document.getElementById('app-container').classList.remove('hidden');
                     fetchData();
                 }, 500);
             } else {
-                Swal.fire({ icon: 'error', title: 'Oops...', text: 'पासवर्ड चुकीचा आहे!', confirmButtonColor: '#166534' });
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'पासवर्ड चुकीचा आहे!', 
+                    text: 'कृपया पुन्हा प्रयत्न करा.', 
+                    confirmButtonColor: '#166534',
+                    background: '#fff',
+                    customClass: { popup: 'rounded-xl' }
+                });
             }
         }
 
         // ==========================================
-        // NAVIGATION & UI
+        // 3. NAVIGATION & UI HELPERS
         // ==========================================
         function switchTab(tabId) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tabId).classList.remove('hidden');
+            // Hide all sections with fade effect
+            document.querySelectorAll('.section').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('animate-fade-in');
+            });
             
-            // Update Active State (Desktop & Mobile)
+            const target = document.getElementById(tabId);
+            target.classList.remove('hidden');
+            void target.offsetWidth; // Trigger reflow
+            target.classList.add('animate-fade-in');
+            
+            // Update Active State
             document.querySelectorAll('.nav-btn, .nav-item').forEach(el => el.classList.remove('active', 'bg-brand-50', 'text-brand-700', 'text-brand-600'));
             
-            // Find buttons linked to this tab and activate
+            // Activate Desktop & Mobile buttons
             document.querySelectorAll(`[data-target="${tabId}"]`).forEach(el => {
-                if(el.classList.contains('nav-btn')) el.classList.add('bg-brand-50', 'text-brand-700', 'active'); // Desktop
-                if(el.classList.contains('nav-item')) { el.classList.add('active', 'text-brand-600'); el.classList.remove('text-slate-400'); } // Mobile
+                if(el.classList.contains('nav-btn')) el.classList.add('bg-brand-50', 'text-brand-700', 'active');
+                if(el.classList.contains('nav-item')) { 
+                    el.classList.add('active', 'text-brand-600'); 
+                    el.classList.remove('text-slate-400'); 
+                }
             });
         }
 
         function showActionSheet() {
             Swal.fire({
-                title: 'काय जमा करायचे आहे?',
+                title: '<span class="text-slate-700 text-lg">काय जमा करायचे आहे?</span>',
+                html: '<p class="text-slate-400 text-sm mb-2">कृपया खालीलपैकी एक निवडा</p>',
                 showCancelButton: true,
                 showDenyButton: true,
-                confirmButtonText: '<i class="fa-solid fa-circle-plus"></i> उत्पन्न (Income)',
-                denyButtonText: '<i class="fa-solid fa-circle-minus"></i> खर्च (Expense)',
+                confirmButtonText: '<div class="flex items-center gap-2"><i class="fa-solid fa-circle-plus"></i> जमा (Income)</div>',
+                denyButtonText: '<div class="flex items-center gap-2"><i class="fa-solid fa-circle-minus"></i> खर्च (Expense)</div>',
                 cancelButtonText: 'रद्द करा',
                 confirmButtonColor: '#22c55e',
                 denyButtonColor: '#ef4444',
-                customClass: { popup: 'rounded-xl' }
+                cancelButtonColor: '#94a3b8',
+                customClass: { 
+                    popup: 'rounded-2xl',
+                    confirmButton: 'w-32',
+                    denyButton: 'w-32'
+                }
             }).then((result) => {
                 if (result.isConfirmed) openTransactionModal('Income');
                 else if (result.isDenied) openTransactionModal('Expense');
@@ -378,62 +586,113 @@
         }
 
         // ==========================================
-        // DATA HANDLING
+        // 4. DATA HANDLING (FETCH & RENDER)
         // ==========================================
         async function fetchData() {
-            document.getElementById('loader').classList.remove('hidden');
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
+            
             try {
-                const response = await fetch(SCRIPT_URL);
+                // Add timestamp to prevent caching
+                const response = await fetch(`${SCRIPT_URL}?t=${new Date().getTime()}`);
                 const json = await response.json();
-                currentState.data = json.reverse(); // Newest first
+                currentState.data = json.reverse(); // Show newest first
                 updateDashboard();
                 renderTable();
             } catch (error) {
                 console.error(error);
-                Swal.fire('Error', 'डेटा लोड करण्यात समस्या आली. इंटरनेट तपासा.', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'डेटा लोड त्रुटी',
+                    text: 'कृपया इंटरनेट कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
+                    confirmButtonColor: '#ef4444'
+                });
             } finally {
-                document.getElementById('loader').classList.add('hidden');
+                loader.classList.add('hidden');
             }
         }
 
         function updateDashboard() {
             let income = 0, expense = 0;
             const pendingContainer = document.getElementById('pendingList');
+            const pendingCountBadge = document.getElementById('pendingCount');
+            
             pendingContainer.innerHTML = '';
-            let hasPending = false;
+            let pendingCounter = 0;
 
             currentState.data.forEach(item => {
+                const amt = parseFloat(item.Amount) || 0;
+                
+                // Calculate Totals based on Approved status
                 if(item.Status === 'Approved') {
-                    if(item.Type === 'Income') income += parseFloat(item.Amount);
-                    else expense += parseFloat(item.Amount);
+                    if(item.Type === 'Income') income += amt;
+                    else expense += amt;
                 }
                 
-                // Pending List Logic
-                if(item.Status === 'Pending' || (item.Status === 'Verified' && currentState.user.role === 'owner')) {
-                    hasPending = true;
+                // Pending List Logic (Show if Pending OR if Verified and user is Owner)
+                const isPending = item.Status === 'Pending';
+                const isVerifiedForOwner = item.Status === 'Verified' && currentState.user.role === 'owner';
+
+                if(isPending || isVerifiedForOwner) {
+                    pendingCounter++;
+                    const statusColor = item.Status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700';
+                    const icon = item.Type === 'Income' ? 'fa-arrow-up text-green-500' : 'fa-arrow-down text-red-500';
+                    
                     const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm';
+                    div.className = 'flex justify-between items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer';
+                    div.onclick = () => { 
+                        // If owner, clicking pending item opens verify modal
+                        if(currentState.user.role === 'owner' && item.Type === 'Expense') {
+                            processAction(item.ID, 'Approved', item.Amount, false);
+                        }
+                    };
+
                     div.innerHTML = `
-                        <div>
-                            <p class="text-sm font-bold text-slate-800">${item.Title}</p>
-                            <p class="text-xs text-slate-500">₹${item.Amount} • ${item.User}</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center">
+                                <i class="fa-solid ${icon} text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800 line-clamp-1">${item.Title}</p>
+                                <p class="text-[10px] text-slate-500">
+                                    ₹${item.Amount} • <i class="fa-solid fa-user text-[8px]"></i> ${item.User}
+                                </p>
+                            </div>
                         </div>
-                        <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">${item.Status}</span>
+                        <span class="text-[10px] px-2 py-1 font-bold rounded-full ${statusColor}">${item.Status}</span>
                     `;
                     pendingContainer.appendChild(div);
                 }
             });
 
-            if(!hasPending) pendingContainer.innerHTML = '<p class="text-slate-400 text-sm text-center italic mt-4">कोणतीही प्रलंबित मागणी नाही.</p>';
+            pendingCountBadge.innerText = pendingCounter;
 
-            // Update Numbers with Animation
-            animateValue("totalIncome", income);
-            animateValue("totalExpense", expense);
-            animateValue("netBalance", income - expense);
+            if(pendingCounter === 0) {
+                pendingContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-40 text-slate-400">
+                        <i class="fa-solid fa-check-circle text-4xl mb-2 text-brand-100"></i>
+                        <p class="text-sm">सर्व कामे पूर्ण झाली आहेत.</p>
+                    </div>`;
+            }
+
+            // Update Numbers with simple formatting
+            document.getElementById("totalIncome").innerText = '₹' + income.toLocaleString('en-IN');
+            document.getElementById("totalExpense").innerText = '₹' + expense.toLocaleString('en-IN');
+            document.getElementById("netBalance").innerText = '₹' + (income - expense).toLocaleString('en-IN');
 
             // Update Chart
+            renderChart(income, expense);
+        }
+
+        function renderChart(income, expense) {
             const ctx = document.getElementById('financeChart').getContext('2d');
+            
             if(currentState.chart) currentState.chart.destroy();
+            
+            if(income === 0 && expense === 0) {
+                // Show empty chart placeholder logic if needed, currently leaving empty
+            }
+
             currentState.chart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -441,120 +700,148 @@
                     datasets: [{
                         data: [income, expense],
                         backgroundColor: ['#22c55e', '#ef4444'],
-                        borderWidth: 0,
-                        hoverOffset: 10
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 15
                     }]
                 },
                 options: {
-                    cutout: '75%',
+                    cutout: '70%',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: 'Poppins' } } },
+                        tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.9)', bodyColor: '#333', titleColor: '#333', borderColor: '#e2e8f0', borderWidth: 1 }
+                    }
                 }
             });
-        }
-
-        function animateValue(id, end) {
-            const obj = document.getElementById(id);
-            const current = parseInt(obj.innerText.replace('₹', '')) || 0;
-            // Simple direct set for now, can add Tweening later
-            obj.innerText = '₹' + end.toLocaleString('en-IN');
         }
 
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const emptyState = document.getElementById('emptyState');
             tbody.innerHTML = '';
+            
+            let hasRows = false;
 
             currentState.data.forEach(item => {
-                // Filter
-                if(searchVal && !item.Title.toLowerCase().includes(searchVal) && !item.User.toLowerCase().includes(searchVal)) return;
+                // Filter Logic
+                const textMatch = item.Title.toLowerCase().includes(searchVal) || 
+                                  item.User.toLowerCase().includes(searchVal) || 
+                                  item.Category.toLowerCase().includes(searchVal);
+                
+                if(!textMatch) return;
+                hasRows = true;
 
                 const isInc = item.Type === 'Income';
-                const color = isInc ? 'text-green-600' : 'text-red-600';
+                const amtColor = isInc ? 'text-green-600' : 'text-red-600';
                 
-                // Status Badge
-                let badge = '';
-                if(item.Status === 'Pending') badge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">Pending</span>';
-                else if(item.Status === 'Verified') badge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">Verified</span>';
-                else if(item.Status === 'Approved') badge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Approved</span>';
-                else badge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Rejected</span>';
+                // Badge Logic
+                let badgeClass = '';
+                if(item.Status === 'Pending') badgeClass = 'bg-yellow-100 text-yellow-700 border border-yellow-200';
+                else if(item.Status === 'Verified') badgeClass = 'bg-blue-100 text-blue-700 border border-blue-200';
+                else if(item.Status === 'Approved') badgeClass = 'bg-green-100 text-green-700 border border-green-200';
+                else badgeClass = 'bg-red-100 text-red-700 border border-red-200';
 
                 // Action Buttons Logic
                 let actions = '';
                 const role = currentState.user.role;
                 
-                // Accountant: Can verify Pending Expenses
+                // 1. Accountant Action: Verify Pending Expenses
                 if(role === 'accountant' && item.Type === 'Expense' && item.Status === 'Pending') {
-                    actions = `<button onclick="processAction('${item.ID}', 'Verified', '${item.Amount}', true)" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 px-3 py-1 rounded border border-blue-200">Verify</button>`;
+                    actions = `<button onclick="processAction('${item.ID}', 'Verified', '${item.Amount}', true)" class="text-white bg-blue-600 hover:bg-blue-700 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition">Verify</button>`;
                 }
-                // Owner: Can Approve/Reject Verified OR Pending
+                // 2. Owner Action: Approve/Reject (Verified or Pending Expenses)
                 else if(role === 'owner' && item.Type === 'Expense' && (item.Status === 'Pending' || item.Status === 'Verified')) {
                     actions = `
-                        <button onclick="processAction('${item.ID}', 'Approved', '${item.Amount}', false)" class="text-green-600 hover:bg-green-50 p-2 rounded-full"><i class="fa-solid fa-check"></i></button>
-                        <button onclick="processAction('${item.ID}', 'Rejected', '${item.Amount}', false)" class="text-red-600 hover:bg-red-50 p-2 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+                        <div class="flex justify-end gap-2">
+                            <button onclick="processAction('${item.ID}', 'Approved', '${item.Amount}', false)" class="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition flex items-center justify-center border border-green-200"><i class="fa-solid fa-check"></i></button>
+                            <button onclick="processAction('${item.ID}', 'Rejected', '${item.Amount}', false)" class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center border border-red-200"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
                     `;
                 }
 
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100 last:border-0';
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100 last:border-0 group';
                 tr.innerHTML = `
                     <td class="px-6 py-4">
-                        <div class="font-bold text-slate-700 text-sm">${item.Date}</div>
-                        <div class="text-xs text-slate-400">${item.User}</div>
+                        <div class="font-bold text-slate-700 text-sm flex items-center gap-2">
+                            <i class="fa-regular fa-calendar text-slate-400"></i> ${formatDate(item.Date)}
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-wide">${item.User}</div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-sm font-medium text-slate-800">${item.Title}</div>
-                        <div class="text-xs text-slate-500">${item.Category}</div>
-                        ${item.Notes ? `<div class="text-[10px] text-slate-400 mt-1 italic max-w-xs truncate">${item.Notes}</div>` : ''}
+                        <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">${item.Category}</span>
+                        ${item.Notes ? `<div class="text-[11px] text-slate-500 mt-1 italic max-w-xs bg-yellow-50 p-1 rounded border border-yellow-100"><i class="fa-solid fa-note-sticky text-yellow-400 mr-1"></i>${item.Notes}</div>` : ''}
                     </td>
-                    <td class="px-6 py-4 text-sm font-bold ${color}">${isInc ? '+' : '-'}₹${item.Amount}</td>
-                    <td class="px-6 py-4">${badge}</td>
-                    <td class="px-6 py-4 text-right">${actions}</td>
+                    <td class="px-6 py-4 text-sm font-bold ${amtColor} font-mono text-base">
+                        ${isInc ? '+' : '-'}₹${item.Amount}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${badgeClass}">${item.Status}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        ${actions}
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            if(!hasRows) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
         }
 
         function filterTable() { renderTable(); }
+        
+        function formatDate(dateString) {
+            // Basic formatter, assumes YYYY-MM-DD
+            const options = { day: 'numeric', month: 'short' };
+            try {
+                return new Date(dateString).toLocaleDateString('mr-IN', options);
+            } catch(e) { return dateString; }
+        }
 
         // ==========================================
-        // ACTIONS (SweetAlert2)
+        // 5. ACTIONS (POPUP & WHATSAPP LOGIC)
         // ==========================================
         
-        // 1. ADD NEW TRANSACTION POPUP
+        // --- ADD NEW TRANSACTION ---
         async function openTransactionModal(type) {
             const isInc = type === 'Income';
             const color = isInc ? '#22c55e' : '#ef4444';
             
-            // HTML Form inside Alert
             const { value: formValues } = await Swal.fire({
-                title: `<span class="${isInc ? 'text-green-600' : 'text-red-600'}">${isInc ? 'उत्पन्न जमा' : 'खर्च मागणी'}</span>`,
+                title: `<div class="flex items-center gap-2 ${isInc ? 'text-green-600' : 'text-red-600'}"><i class="fa-solid ${isInc ? 'fa-circle-plus' : 'fa-circle-minus'}"></i> ${isInc ? 'उत्पन्न जमा' : 'खर्च मागणी'}</div>`,
                 html: `
-                    <div class="text-left space-y-3">
+                    <div class="text-left space-y-3 mt-4">
                         <div>
-                            <label class="text-xs font-bold text-slate-500">तारीख</label>
-                            <input id="swal-date" type="date" class="w-full border p-2 rounded" value="${new Date().toISOString().split('T')[0]}">
+                            <label class="text-xs font-bold text-slate-500 uppercase">तारीख</label>
+                            <input id="swal-date" type="date" class="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-sm" value="${new Date().toISOString().split('T')[0]}">
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-slate-500">रक्कम (₹)</label>
-                            <input id="swal-amount" type="number" class="w-full border p-2 rounded" placeholder="00">
+                            <label class="text-xs font-bold text-slate-500 uppercase">रक्कम (₹)</label>
+                            <input id="swal-amount" type="number" class="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-lg font-bold text-slate-700" placeholder="0">
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-slate-500">शीर्षक/कारण</label>
-                            <input id="swal-title" type="text" class="w-full border p-2 rounded" placeholder="उदा. मजुरी / ऊस बिल">
+                            <label class="text-xs font-bold text-slate-500 uppercase">तपशील / कारण</label>
+                            <input id="swal-title" type="text" class="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-sm" placeholder="उदा. खते खरेदी / मजुरी">
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-slate-500">वर्गवारी (Category)</label>
-                            <select id="swal-cat" class="w-full border p-2 rounded">
+                            <label class="text-xs font-bold text-slate-500 uppercase">वर्गवारी (Category)</label>
+                            <select id="swal-cat" class="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white text-sm">
                                 ${isInc ? 
                                     '<option>पीक विक्री</option><option>इतर</option>' : 
                                     '<option>मजूर (Labour)</option><option>खते/बियाणे</option><option>यंत्र/डिझेल</option><option>इतर</option>'}
                             </select>
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-slate-500">नोट्स (Optional)</label>
-                            <textarea id="swal-notes" class="w-full border p-2 rounded" rows="2"></textarea>
+                            <label class="text-xs font-bold text-slate-500 uppercase">नोट्स (Optional)</label>
+                            <textarea id="swal-notes" class="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-sm" rows="2" placeholder="अधिक माहिती..."></textarea>
                         </div>
                     </div>
                 `,
@@ -562,11 +849,12 @@
                 confirmButtonColor: color,
                 confirmButtonText: 'सबमिट करा',
                 cancelButtonText: 'रद्द',
+                customClass: { popup: 'rounded-xl' },
                 focusConfirm: false,
                 preConfirm: () => {
                     const amt = document.getElementById('swal-amount').value;
                     const title = document.getElementById('swal-title').value;
-                    if (!amt || !title) { Swal.showValidationMessage('कृपया रक्कम आणि शीर्षक टाका'); }
+                    if (!amt || !title) { Swal.showValidationMessage('कृपया रक्कम आणि शीर्षक दोन्ही टाका'); }
                     return {
                         date: document.getElementById('swal-date').value,
                         amount: amt,
@@ -578,37 +866,50 @@
             });
 
             if (formValues) {
-                // Submit Data
                 const params = new URLSearchParams();
                 params.append('action', 'add');
                 params.append('type', type);
-                params.append('user', currentState.user.role); // Saving role as user ID simplified
+                params.append('user', currentState.user.role); 
                 for (const key in formValues) params.append(key, formValues[key]);
                 
-                sendData(params, "यशस्वी!", "नोंद झाली आहे.");
+                // Submit Data
+                sendData(params, "यशस्वी!", "नोंद झाली आहे.").then(() => {
+                    // ★ WHATSAPP NOTIFICATION LOGIC FOR FIELD USER ★
+                    if(currentState.user.role === 'field_user' && type === 'Expense') {
+                        fireWhatsAppAlert(
+                            `नमस्कार ऋषीकेश भैया, मी रू ${formValues.amount} चा खर्च नोंदविला आहे. तो विकास यांचेकडे ॲप्रोव्हला गेला आहे. कृपया पेमेंट प्रोसेस करावे. कारण: ${formValues.title}`
+                        );
+                    }
+                });
             }
         }
 
-        // 2. APPROVE / VERIFY POPUP
+        // --- APPROVE / VERIFY ACTION ---
         async function processAction(id, newStatus, currentAmt, isEditAllowed) {
             let amount = currentAmt;
             let note = "";
 
             if (isEditAllowed) {
-                // Accountant Flow
+                // ACCOUNTANT FLOW: Verify & Edit Amount
                 const { value: formValues } = await Swal.fire({
-                    title: 'तपासणी (Verify)',
+                    title: '<span class="text-blue-700">तपासणी (Verify)</span>',
                     html: `
-                        <label class="block text-left text-xs mb-1">मंजूर रक्कम (Confirm Amount)</label>
-                        <input id="verify-amt" type="number" class="swal2-input m-0 w-full mb-3" value="${currentAmt}">
-                        <label class="block text-left text-xs mb-1">बदल केल्यास कारण (Note)</label>
-                        <input id="verify-note" type="text" class="swal2-input m-0 w-full" placeholder="Optional">
+                        <div class="text-left mt-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">मंजूर रक्कम (Confirm Amount)</label>
+                            <input id="verify-amt" type="number" class="w-full border border-slate-300 p-2 rounded-lg mb-3 font-bold text-lg" value="${currentAmt}">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">बदल केल्यास कारण (Note)</label>
+                            <input id="verify-note" type="text" class="w-full border border-slate-300 p-2 rounded-lg" placeholder="रक्कम कमी केल्यास कारण लिहा...">
+                        </div>
                     `,
                     focusConfirm: false,
                     showCancelButton: true,
                     confirmButtonText: 'Verify & Submit',
+                    confirmButtonColor: '#2563eb',
+                    customClass: { popup: 'rounded-xl' },
                     preConfirm: () => {
-                        return [document.getElementById('verify-amt').value, document.getElementById('verify-note').value];
+                        const val = document.getElementById('verify-amt').value;
+                        if(!val) Swal.showValidationMessage("रक्कम आवश्यक आहे");
+                        return [val, document.getElementById('verify-note').value];
                     }
                 });
                 if(formValues) {
@@ -616,14 +917,16 @@
                     note = formValues[1];
                 } else return;
             } else {
-                // Owner Flow
+                // OWNER FLOW: Approve/Reject Direct
                 const result = await Swal.fire({
                     title: newStatus === 'Approved' ? 'मंजूर करायचे का?' : 'नाकारायचे का?',
-                    text: `रक्कम: ₹${currentAmt}`,
+                    html: `<p class="text-lg font-bold">रक्कम: ₹${currentAmt}</p>`,
                     icon: newStatus === 'Approved' ? 'question' : 'warning',
                     showCancelButton: true,
                     confirmButtonColor: newStatus === 'Approved' ? '#22c55e' : '#ef4444',
-                    confirmButtonText: 'होय, पुढे चला'
+                    confirmButtonText: newStatus === 'Approved' ? 'होय, मंजूर करा' : 'होय, नाकारा',
+                    cancelButtonText: 'थांबा',
+                    customClass: { popup: 'rounded-xl' }
                 });
                 if(!result.isConfirmed) return;
             }
@@ -635,24 +938,79 @@
             params.append('amount', amount);
             params.append('notes', note);
 
-            sendData(params, "Updated!", "Status बदलले आहे.");
+            sendData(params, "Updated!", "Status बदलले आहे.").then(() => {
+                // ★ WHATSAPP NOTIFICATION LOGIC FOR ACCOUNTANT ★
+                if(currentState.user.role === 'accountant' && newStatus === 'Verified') {
+                    let msg = `शेत कामगार यांनी नोंदविलेला खर्च रू ${currentAmt} जो मी रू ${amount} ने मंजूर केला आहे.`;
+                    if(parseFloat(amount) < parseFloat(currentAmt)) {
+                        msg += ` (कारण: ${note || 'कपात केली आहे'}).`;
+                    }
+                    msg += ` त्याला मंजूर करावे म्हणजे पेमेंट सोडता येईल.`;
+
+                    fireWhatsAppAlert(msg);
+                }
+            });
         }
 
+        // --- HELPER TO SEND DATA ---
         function sendData(params, successTitle, successMsg) {
-            Swal.fire({ title: 'प्रोसेसिंग...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ 
+                title: 'प्रोसेसिंग...', 
+                html: '<div class="mt-2 text-sm text-slate-500">कृपया प्रतीक्षा करा</div>',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+                customClass: { popup: 'rounded-xl' }
+            });
             
-            fetch(SCRIPT_URL, { method: 'POST', body: params })
+            return fetch(SCRIPT_URL, { method: 'POST', body: params })
                 .then(r => r.json())
                 .then(d => {
                     if(d.result === 'success' || d.result === 'updated') {
-                        Swal.fire({ icon: 'success', title: successTitle, text: successMsg, timer: 2000, showConfirmButton: false });
+                        // Close loading, show success toast
+                        Swal.close();
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        });
+                        Toast.fire({ icon: 'success', title: successMsg });
                         fetchData();
                         if(params.get('action') === 'add') switchTab('transactions');
+                        return true; // Resolve promise
                     } else {
                         throw new Error(d.error || 'Unknown Error');
                     }
                 })
-                .catch(e => Swal.fire('Error', 'काहीतरी चूक झाली: ' + e.message, 'error'));
+                .catch(e => {
+                    Swal.fire('Error', 'काहीतरी चूक झाली: ' + e.message, 'error');
+                    return false;
+                });
+        }
+
+        // --- HELPER TO FIRE WHATSAPP ALERT ---
+        function fireWhatsAppAlert(message) {
+            Swal.fire({
+                title: 'व्हॉट्सअ‍ॅपवर कळवा?',
+                text: "ऋषीकेश यांना याबद्दल मेसेज पाठवायचा का?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#25D366', // WhatsApp Green
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="fa-brands fa-whatsapp"></i> होय, पाठवा',
+                cancelButtonText: 'नको',
+                customClass: { popup: 'rounded-xl' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const url = `https://wa.me/${RISHIKESH_PHONE}?text=${encodeURIComponent(message)}`;
+                    window.open(url, '_blank');
+                }
+            });
         }
 
     </script>
