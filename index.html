@@ -2,253 +2,630 @@
 <html lang="mr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ॲग्री पार्टनर (AgriPartner Pro)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AgriPartner Pro</title>
+    
+    <!-- LIBRARIES -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- SUPER POPUPS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- CUSTOM CONFIG FOR TAILWIND -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            800: '#166534',
+                            900: '#14532d', // Deep Farm Green
+                        },
+                        accent: {
+                            500: '#f59e0b', // Gold for Money
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'Noto Sans Devanagari', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
-        body { font-family: 'Noto Sans Devanagari', sans-serif; background-color: #f3f4f6; }
-        .glass-panel { background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; }
-        .sidebar-link.active { background-color: #e0f2fe; color: #0284c7; border-right: 4px solid #0284c7; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto; }
+        /* Custom Styles for "Pro" Look */
+        body { background: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+        
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+
+        /* Login Background */
+        .login-bg {
+            background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .login-bg::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: rotate 20s linear infinite;
+        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Nav Active State */
+        .nav-item.active { color: #166534; font-weight: 700; position: relative; }
+        .nav-item.active::after {
+            content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+            width: 6px; height: 6px; background: #166534; border-radius: 50%;
+        }
+
+        /* Loading Spinner */
+        .loader-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .spinner { width: 50px; height: 50px; border: 5px solid #dcfce7; border-top: 5px solid #166534; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col">
 
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="fixed inset-0 bg-green-800 z-50 flex flex-col justify-center items-center">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center">
-            <h2 class="text-2xl font-bold mb-2 text-gray-800">AgriPartner Login</h2>
-            <div class="text-left space-y-4 mt-6">
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">तुम्ही कोण आहात?</label>
-                    <select id="userRole" class="w-full border p-2 rounded bg-gray-50">
-                        <option value="field_user">शेत कामगार (Field User)</option>
-                        <option value="accountant">अकाउंटंट (Office)</option>
-                        <option value="owner">मालक (Owner)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">पासवर्ड</label>
-                    <input type="password" id="password" class="w-full border p-2 rounded" placeholder="पासवर्ड टाका">
-                </div>
-                <button onclick="login()" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700">लॉग इन करा</button>
-                <p id="login-msg" class="text-red-500 text-xs text-center mt-2"></p>
-            </div>
+    <!-- LOADER -->
+    <div id="loader" class="loader-overlay hidden">
+        <div class="flex flex-col items-center">
+            <div class="spinner"></div>
+            <p class="mt-4 text-brand-900 font-bold animate-pulse">डेटा लोड होत आहे...</p>
         </div>
     </div>
 
-    <!-- MAIN APP -->
-    <div id="app-container" class="flex h-screen hidden">
-        <!-- Sidebar Desktop -->
-        <div class="w-64 bg-white border-r hidden md:flex flex-col justify-between h-full">
-            <div>
-                <div class="p-6 border-b font-bold text-xl text-green-700"><i class="fa-solid fa-seedling"></i> AgriPartner</div>
-                <nav class="mt-6 space-y-1">
-                    <a onclick="switchTab('dashboard')" class="sidebar-link active flex items-center px-6 py-3 cursor-pointer"><i class="fa-solid fa-chart-pie w-6"></i> डॅशबोर्ड</a>
-                    <a onclick="switchTab('transactions')" class="sidebar-link flex items-center px-6 py-3 cursor-pointer"><i class="fa-solid fa-list-check w-6"></i> व्यवहार यादी</a>
-                    <a onclick="switchTab('income')" class="sidebar-link flex items-center px-6 py-3 cursor-pointer"><i class="fa-solid fa-sack-dollar w-6"></i> उत्पन्न (Sales)</a>
-                    <a onclick="switchTab('expense')" class="sidebar-link flex items-center px-6 py-3 cursor-pointer"><i class="fa-solid fa-file-invoice-dollar w-6"></i> खर्च मागणी</a>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 login-bg z-50 flex flex-col justify-center items-center p-6">
+        <div class="glass-card p-8 w-full max-w-sm text-center shadow-2xl animate__animated animate__fadeInUp">
+            <div class="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <i class="fa-solid fa-leaf text-4xl text-brand-800"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-brand-900 mb-2">AgriPartner Pro</h1>
+            <p class="text-slate-500 text-sm mb-8">प्रगत शेती व्यवस्थापन प्रणाली</p>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">तुमची भूमिका (Role)</label>
+                    <div class="relative mt-1">
+                        <i class="fa-solid fa-user absolute left-3 top-3 text-slate-400"></i>
+                        <select id="userRole" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none appearance-none transition">
+                            <option value="field_user">शेत कामगार (Field User)</option>
+                            <option value="accountant">अकाउंटंट (Office)</option>
+                            <option value="owner">मालक (Owner)</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">पासवर्ड</label>
+                    <div class="relative mt-1">
+                        <i class="fa-solid fa-lock absolute left-3 top-3 text-slate-400"></i>
+                        <input type="password" id="password" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="******">
+                    </div>
+                </div>
+                <button onclick="login()" class="w-full bg-brand-600 hover:bg-brand-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] active:scale-95">
+                    लॉग इन करा
+                </button>
+            </div>
+            <p class="mt-6 text-xs text-slate-400">Secure • Fast • Reliable</p>
+        </div>
+    </div>
+
+    <!-- MAIN APP LAYOUT -->
+    <div id="app-container" class="flex-1 flex flex-col md:flex-row h-full hidden overflow-hidden">
+        
+        <!-- SIDEBAR (DESKTOP) -->
+        <div class="hidden md:flex flex-col w-72 bg-white border-r border-slate-200 shadow-xl z-20">
+            <div class="p-8 border-b border-slate-100 flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                <span class="font-bold text-xl text-slate-800 tracking-tight">AgriPartner</span>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <p class="px-4 text-xs font-bold text-slate-400 uppercase mb-2">MENU</p>
+                <nav class="space-y-1">
+                    <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-brand-50 hover:text-brand-700 transition flex items-center gap-3 nav-btn active" data-target="dashboard">
+                        <i class="fa-solid fa-chart-pie w-6"></i> डॅशबोर्ड
+                    </button>
+                    <button onclick="switchTab('transactions')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-brand-50 hover:text-brand-700 transition flex items-center gap-3 nav-btn" data-target="transactions">
+                        <i class="fa-solid fa-list-check w-6"></i> व्यवहार यादी
+                    </button>
+                    <button onclick="openTransactionModal('Income')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-brand-50 hover:text-brand-700 transition flex items-center gap-3">
+                        <i class="fa-solid fa-circle-plus text-green-500 w-6"></i> उत्पन्न जमा (Income)
+                    </button>
+                    <button onclick="openTransactionModal('Expense')" class="w-full text-left px-4 py-3 rounded-lg text-slate-600 hover:bg-brand-50 hover:text-brand-700 transition flex items-center gap-3">
+                        <i class="fa-solid fa-circle-minus text-red-500 w-6"></i> खर्च मागणी (Expense)
+                    </button>
                 </nav>
             </div>
-            <div class="p-4 border-t">
-                <p class="text-sm font-bold" id="userNameDisplay">User</p>
-                <button onclick="location.reload()" class="text-red-500 text-sm mt-2">Log Out</button>
+            <div class="p-4 bg-slate-50 border-t border-slate-200">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold" id="avatar">U</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-slate-900 truncate" id="userName">User Name</p>
+                        <p class="text-xs text-slate-500 truncate" id="userRoleDisplay">Role</p>
+                    </div>
+                </div>
+                <button onclick="location.reload()" class="w-full py-2 text-xs font-bold text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition">Log Out</button>
             </div>
         </div>
 
-        <!-- Mobile Header -->
-        <div class="md:hidden fixed top-0 w-full bg-white border-b z-20 flex justify-between items-center p-4">
-            <span class="font-bold text-lg text-green-700">AgriPartner</span>
-            <button onclick="document.querySelector('.mobile-menu').classList.toggle('hidden')"><i class="fa-solid fa-bars"></i></button>
-        </div>
-        <div class="mobile-menu hidden fixed top-14 w-full bg-white shadow-lg z-10 md:hidden">
-            <a onclick="switchTab('dashboard')" class="block p-4 border-b">डॅशबोर्ड</a>
-            <a onclick="switchTab('transactions')" class="block p-4 border-b">व्यवहार यादी</a>
-            <a onclick="switchTab('income')" class="block p-4 border-b">उत्पन्न जमा</a>
-            <a onclick="switchTab('expense')" class="block p-4 border-b">खर्च मागणी</a>
-            <a onclick="location.reload()" class="block p-4 text-red-500">बाहेर पडा</a>
-        </div>
-
-        <!-- Content -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-8 mt-14 md:mt-0">
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col bg-slate-50 h-full relative overflow-hidden">
             
-            <!-- Dashboard -->
-            <div id="dashboard" class="section space-y-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-bold">आर्थिक आढावा</h2>
-                    <button onclick="fetchData()" class="text-sm bg-white border px-3 py-1 rounded"><i class="fa-solid fa-rotate"></i> रिफ्रेश</button>
+            <!-- HEADER (MOBILE ONLY) -->
+            <div class="md:hidden bg-white px-4 py-3 border-b flex justify-between items-center shadow-sm z-20">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-leaf text-brand-600 text-xl"></i>
+                    <span class="font-bold text-lg">AgriPartner</span>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="glass-panel p-6 border-l-4 border-green-500">
-                        <p class="uppercase text-xs font-bold text-gray-500">एकूण विक्री (Income)</p>
-                        <h3 class="text-2xl font-bold text-green-600" id="d-income">₹0</h3>
-                    </div>
-                    <div class="glass-panel p-6 border-l-4 border-red-500">
-                        <p class="uppercase text-xs font-bold text-gray-500">मंजूर खर्च (Approved Expense)</p>
-                        <h3 class="text-2xl font-bold text-red-600" id="d-expense">₹0</h3>
-                    </div>
-                    <div class="glass-panel p-6 border-l-4 border-blue-500">
-                        <p class="uppercase text-xs font-bold text-gray-500">शिल्लक नफा</p>
-                        <h3 class="text-2xl font-bold text-blue-600" id="d-profit">₹0</h3>
-                    </div>
-                </div>
-                <div class="glass-panel p-6">
-                    <canvas id="mainChart" style="max-height: 300px;"></canvas>
-                </div>
+                <button onclick="location.reload()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-power-off"></i></button>
             </div>
 
-            <!-- Transactions List -->
-            <div id="transactions" class="section hidden">
-                <div class="glass-panel p-4 md:p-6">
-                    <h3 class="text-xl font-bold mb-4">सर्व नोंदी</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">तारीख/तपशील</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">रक्कम</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">स्थिती</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">कृती (Action)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody" class="divide-y divide-gray-200 bg-white"></tbody>
-                        </table>
-                        <div id="loader" class="text-center py-4 hidden"><div class="loader"></div></div>
+            <!-- SCROLLABLE CONTENT -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+                
+                <!-- SECTION: DASHBOARD -->
+                <div id="dashboard" class="section space-y-6">
+                    <!-- Top Bar -->
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">नमस्ते! <span id="dashName" class="text-brand-600">User</span></h2>
+                            <p class="text-slate-500 text-sm">आजची आर्थिक स्थिती</p>
+                        </div>
+                        <button onclick="fetchData()" class="bg-white p-2 rounded-full shadow-md text-brand-600 hover:rotate-180 transition duration-500"><i class="fa-solid fa-rotate"></i></button>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <!-- Income -->
+                        <div class="glass-card p-6 relative overflow-hidden">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-100 rounded-full opacity-50"></div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">एकूण जमा (Income)</p>
+                            <h3 class="text-3xl font-bold text-slate-800 mt-2" id="totalIncome">₹0</h3>
+                            <div class="mt-4 flex items-center text-xs text-green-600 font-bold">
+                                <i class="fa-solid fa-arrow-trend-up mr-1"></i> विक्री व इतर
+                            </div>
+                        </div>
+                        <!-- Expense -->
+                        <div class="glass-card p-6 relative overflow-hidden">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-100 rounded-full opacity-50"></div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">मंजूर खर्च (Approved)</p>
+                            <h3 class="text-3xl font-bold text-slate-800 mt-2" id="totalExpense">₹0</h3>
+                            <div class="mt-4 flex items-center text-xs text-red-500 font-bold">
+                                <i class="fa-solid fa-arrow-trend-down mr-1"></i> शेती खर्च
+                            </div>
+                        </div>
+                        <!-- Balance -->
+                        <div class="glass-card p-6 bg-gradient-to-br from-brand-600 to-brand-800 text-white shadow-brand-500/30 shadow-xl">
+                            <p class="text-xs font-bold text-brand-100 uppercase tracking-wider">शिल्लक नफा</p>
+                            <h3 class="text-3xl font-bold mt-2" id="netBalance">₹0</h3>
+                            <div class="mt-4 flex items-center text-xs text-brand-100">
+                                <i class="fa-solid fa-wallet mr-1"></i> कॅश इन हँड
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart & Recent Activity -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="glass-card p-6">
+                            <h4 class="font-bold text-slate-700 mb-4">खर्च vs उत्पन्न</h4>
+                            <div class="h-64 flex justify-center">
+                                <canvas id="financeChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass-card p-6">
+                            <h4 class="font-bold text-slate-700 mb-4">प्रलंबित मागण्या (Pending)</h4>
+                            <div id="pendingList" class="space-y-3 overflow-y-auto max-h-64">
+                                <!-- Pending Items injected here -->
+                                <p class="text-slate-400 text-sm text-center italic">कोणतीही प्रलंबित मागणी नाही.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- SECTION: TRANSACTIONS LIST -->
+                <div id="transactions" class="section hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-slate-800">व्यवहार यादी</h2>
+                        <div class="flex gap-2">
+                             <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterTable()" class="px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                    </div>
+
+                    <div class="glass-card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">तारीख/User</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">तपशील</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">रक्कम</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">स्थिती</th>
+                                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase">कृती</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody" class="divide-y divide-slate-100">
+                                    <!-- Rows go here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Income Form -->
-            <div id="income" class="section hidden max-w-lg mx-auto">
-                <div class="glass-panel p-8">
-                    <h3 class="text-xl font-bold mb-4 text-green-700">नवीन विक्री/उत्पन्न जमा करा</h3>
-                    <form onsubmit="submitForm(event, 'Income')" class="space-y-4">
-                        <input type="date" name="date" required class="w-full border p-2 rounded">
-                        <input type="number" name="amount" placeholder="रक्कम (₹)" required class="w-full border p-2 rounded">
-                        <input type="text" name="title" placeholder="कशाचे पैसे आले? (उदा. ऊस बिल)" required class="w-full border p-2 rounded">
-                        <select name="category" class="w-full border p-2 rounded">
-                            <option>पीक विक्री</option>
-                            <option>इतर उत्पन्न</option>
-                        </select>
-                        <textarea name="notes" placeholder="जादा माहिती" class="w-full border p-2 rounded"></textarea>
-                        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded font-bold">जमा करा</button>
-                    </form>
+            <!-- MOBILE BOTTOM NAV -->
+            <div class="md:hidden fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-around py-3 px-2 z-30 shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
+                <button onclick="switchTab('dashboard')" class="nav-item active flex flex-col items-center text-slate-400 hover:text-brand-600 transition" data-target="dashboard">
+                    <i class="fa-solid fa-house text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Home</span>
+                </button>
+                
+                <!-- Floating Action Button Center -->
+                <div class="relative -top-8">
+                    <button onclick="showActionSheet()" class="w-14 h-14 bg-gradient-to-tr from-brand-500 to-brand-700 rounded-full text-white shadow-lg shadow-brand-500/40 flex items-center justify-center transform transition active:scale-95">
+                        <i class="fa-solid fa-plus text-2xl"></i>
+                    </button>
                 </div>
-            </div>
 
-            <!-- Expense Form -->
-            <div id="expense" class="section hidden max-w-lg mx-auto">
-                <div class="glass-panel p-8">
-                    <h3 class="text-xl font-bold mb-4 text-red-700">खर्च मागणी नोंदवा</h3>
-                    <form onsubmit="submitForm(event, 'Expense')" class="space-y-4">
-                        <input type="date" name="date" required class="w-full border p-2 rounded">
-                        <input type="number" name="amount" placeholder="अंदाजित रक्कम (₹)" required class="w-full border p-2 rounded">
-                        <input type="text" name="title" placeholder="खर्चाचे कारण (उदा. खते)" required class="w-full border p-2 rounded">
-                        <select name="category" class="w-full border p-2 rounded">
-                            <option>मजूर (Labour)</option>
-                            <option>खते/बियाणे</option>
-                            <option>यंत्र/डिझेल</option>
-                            <option>इतर</option>
-                        </select>
-                        <textarea name="notes" placeholder="सविस्तर माहिती" class="w-full border p-2 rounded"></textarea>
-                        <button type="submit" class="w-full bg-red-600 text-white py-2 rounded font-bold">मागणी पाठवा</button>
-                    </form>
-                </div>
+                <button onclick="switchTab('transactions')" class="nav-item flex flex-col items-center text-slate-400 hover:text-brand-600 transition" data-target="transactions">
+                    <i class="fa-solid fa-list-ul text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">History</span>
+                </button>
             </div>
 
         </div>
     </div>
 
     <script>
-        // Google Apps Script URL (Paste your Deployment URL here)
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyulDwY9rvV9HEsWBy1udPjs_CDZJzz8liMjTVaA--5WAP8VpGBRMG6n31f0NU6jL4/exec";
+        // ==========================================
+        // CONFIG & STATE
+        // ==========================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwubIyvlWSpWy2_m28xbeEJP46iaxCIQh-ke_e1_2MuyQ67ZXfepVg0z3BzvpkTM-c/exec"; // ★ इथे तुमचा URL टाका ★
+        
+        let currentState = {
+            user: { role: '', name: '' },
+            data: [],
+            chart: null
+        };
 
-        let currentUser = { role: '', name: '' };
-        let allData = [];
-        let myChart = null;
-
+        // ==========================================
+        // AUTHENTICATION
+        // ==========================================
         function login() {
-            const pass = document.getElementById('password').value;
             const role = document.getElementById('userRole').value;
+            const pass = document.getElementById('password').value;
             
-            // PASSWORD CHECK (12345678)
-            if (pass === '12345678') {
-                currentUser.role = role;
-                currentUser.name = role === 'owner' ? 'मालक' : (role === 'accountant' ? 'अकाउंटंट' : 'शेत कामगार');
+            if(pass === '12345678') {
+                currentState.user.role = role;
+                const names = { 'field_user': 'शेत कामगार', 'accountant': 'अकाउंटंट', 'owner': 'मालक' };
+                currentState.user.name = names[role];
                 
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                document.getElementById('userNameDisplay').innerText = currentUser.name + " (" + role.toUpperCase() + ")";
+                // UI Update
+                document.getElementById('userName').innerText = currentState.user.name;
+                document.getElementById('dashName').innerText = currentState.user.name;
+                document.getElementById('avatar').innerText = currentState.user.name.charAt(0);
+                document.getElementById('userRoleDisplay').innerText = role.toUpperCase();
                 
-                fetchData();
+                // Animation Out
+                document.getElementById('login-screen').classList.add('animate__animated', 'animate__fadeOutUp');
+                setTimeout(() => {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    fetchData();
+                }, 500);
             } else {
-                document.getElementById('login-msg').innerText = "पासवर्ड चुकीचा आहे!";
+                Swal.fire({ icon: 'error', title: 'Oops...', text: 'पासवर्ड चुकीचा आहे!', confirmButtonColor: '#166534' });
             }
         }
 
-        function switchTab(id) {
+        // ==========================================
+        // NAVIGATION & UI
+        // ==========================================
+        function switchTab(tabId) {
+            // Hide all sections
             document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-            document.querySelector('.mobile-menu').classList.add('hidden');
-            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
-            // Highlight logic skipped for brevity
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Update Active State (Desktop & Mobile)
+            document.querySelectorAll('.nav-btn, .nav-item').forEach(el => el.classList.remove('active', 'bg-brand-50', 'text-brand-700', 'text-brand-600'));
+            
+            // Find buttons linked to this tab and activate
+            document.querySelectorAll(`[data-target="${tabId}"]`).forEach(el => {
+                if(el.classList.contains('nav-btn')) el.classList.add('bg-brand-50', 'text-brand-700', 'active'); // Desktop
+                if(el.classList.contains('nav-item')) { el.classList.add('active', 'text-brand-600'); el.classList.remove('text-slate-400'); } // Mobile
+            });
         }
 
+        function showActionSheet() {
+            Swal.fire({
+                title: 'काय जमा करायचे आहे?',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: '<i class="fa-solid fa-circle-plus"></i> उत्पन्न (Income)',
+                denyButtonText: '<i class="fa-solid fa-circle-minus"></i> खर्च (Expense)',
+                cancelButtonText: 'रद्द करा',
+                confirmButtonColor: '#22c55e',
+                denyButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-xl' }
+            }).then((result) => {
+                if (result.isConfirmed) openTransactionModal('Income');
+                else if (result.isDenied) openTransactionModal('Expense');
+            });
+        }
+
+        // ==========================================
+        // DATA HANDLING
+        // ==========================================
         async function fetchData() {
             document.getElementById('loader').classList.remove('hidden');
             try {
-                const res = await fetch(SCRIPT_URL);
-                const data = await res.json();
-                allData = data; // नवीन डेटा वर येतो (Reverse in script)
+                const response = await fetch(SCRIPT_URL);
+                const json = await response.json();
+                currentState.data = json.reverse(); // Newest first
+                updateDashboard();
                 renderTable();
-                renderStats();
-            } catch (err) { alert("डेटा लोड एरर!"); }
-            document.getElementById('loader').classList.add('hidden');
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'डेटा लोड करण्यात समस्या आली. इंटरनेट तपासा.', 'error');
+            } finally {
+                document.getElementById('loader').classList.add('hidden');
+            }
         }
 
-        function submitForm(e, type) {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const oldText = btn.innerText;
-            btn.innerText = "पाठवत आहे..."; btn.disabled = true;
+        function updateDashboard() {
+            let income = 0, expense = 0;
+            const pendingContainer = document.getElementById('pendingList');
+            pendingContainer.innerHTML = '';
+            let hasPending = false;
 
-            const formData = new FormData(e.target);
-            const params = new URLSearchParams();
-            params.append('action', 'add');
-            params.append('type', type);
-            params.append('user', currentUser.role);
-            for(let pair of formData) params.append(pair[0], pair[1]);
+            currentState.data.forEach(item => {
+                if(item.Status === 'Approved') {
+                    if(item.Type === 'Income') income += parseFloat(item.Amount);
+                    else expense += parseFloat(item.Amount);
+                }
+                
+                // Pending List Logic
+                if(item.Status === 'Pending' || (item.Status === 'Verified' && currentState.user.role === 'owner')) {
+                    hasPending = true;
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm';
+                    div.innerHTML = `
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">${item.Title}</p>
+                            <p class="text-xs text-slate-500">₹${item.Amount} • ${item.User}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">${item.Status}</span>
+                    `;
+                    pendingContainer.appendChild(div);
+                }
+            });
 
-            fetch(SCRIPT_URL, { method: 'POST', body: params })
-                .then(r => r.json())
-                .then(d => {
-                    alert("नोंद यशस्वी!");
-                    e.target.reset();
-                    fetchData();
-                    switchTab('transactions');
-                })
-                .finally(() => { btn.innerText = oldText; btn.disabled = false; });
+            if(!hasPending) pendingContainer.innerHTML = '<p class="text-slate-400 text-sm text-center italic mt-4">कोणतीही प्रलंबित मागणी नाही.</p>';
+
+            // Update Numbers with Animation
+            animateValue("totalIncome", income);
+            animateValue("totalExpense", expense);
+            animateValue("netBalance", income - expense);
+
+            // Update Chart
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            if(currentState.chart) currentState.chart.destroy();
+            currentState.chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['उत्पन्न (Income)', 'खर्च (Expense)'],
+                    datasets: [{
+                        data: [income, expense],
+                        backgroundColor: ['#22c55e', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
+                }
+            });
         }
 
-        function updateStatus(id, newStatus, currentAmt, currentNotes) {
+        function animateValue(id, end) {
+            const obj = document.getElementById(id);
+            const current = parseInt(obj.innerText.replace('₹', '')) || 0;
+            // Simple direct set for now, can add Tweening later
+            obj.innerText = '₹' + end.toLocaleString('en-IN');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            currentState.data.forEach(item => {
+                // Filter
+                if(searchVal && !item.Title.toLowerCase().includes(searchVal) && !item.User.toLowerCase().includes(searchVal)) return;
+
+                const isInc = item.Type === 'Income';
+                const color = isInc ? 'text-green-600' : 'text-red-600';
+                
+                // Status Badge
+                let badge = '';
+                if(item.Status === 'Pending') badge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">Pending</span>';
+                else if(item.Status === 'Verified') badge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">Verified</span>';
+                else if(item.Status === 'Approved') badge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Approved</span>';
+                else badge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Rejected</span>';
+
+                // Action Buttons Logic
+                let actions = '';
+                const role = currentState.user.role;
+                
+                // Accountant: Can verify Pending Expenses
+                if(role === 'accountant' && item.Type === 'Expense' && item.Status === 'Pending') {
+                    actions = `<button onclick="processAction('${item.ID}', 'Verified', '${item.Amount}', true)" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 px-3 py-1 rounded border border-blue-200">Verify</button>`;
+                }
+                // Owner: Can Approve/Reject Verified OR Pending
+                else if(role === 'owner' && item.Type === 'Expense' && (item.Status === 'Pending' || item.Status === 'Verified')) {
+                    actions = `
+                        <button onclick="processAction('${item.ID}', 'Approved', '${item.Amount}', false)" class="text-green-600 hover:bg-green-50 p-2 rounded-full"><i class="fa-solid fa-check"></i></button>
+                        <button onclick="processAction('${item.ID}', 'Rejected', '${item.Amount}', false)" class="text-red-600 hover:bg-red-50 p-2 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+                    `;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100 last:border-0';
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-700 text-sm">${item.Date}</div>
+                        <div class="text-xs text-slate-400">${item.User}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-slate-800">${item.Title}</div>
+                        <div class="text-xs text-slate-500">${item.Category}</div>
+                        ${item.Notes ? `<div class="text-[10px] text-slate-400 mt-1 italic max-w-xs truncate">${item.Notes}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4 text-sm font-bold ${color}">${isInc ? '+' : '-'}₹${item.Amount}</td>
+                    <td class="px-6 py-4">${badge}</td>
+                    <td class="px-6 py-4 text-right">${actions}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable() { renderTable(); }
+
+        // ==========================================
+        // ACTIONS (SweetAlert2)
+        // ==========================================
+        
+        // 1. ADD NEW TRANSACTION POPUP
+        async function openTransactionModal(type) {
+            const isInc = type === 'Income';
+            const color = isInc ? '#22c55e' : '#ef4444';
+            
+            // HTML Form inside Alert
+            const { value: formValues } = await Swal.fire({
+                title: `<span class="${isInc ? 'text-green-600' : 'text-red-600'}">${isInc ? 'उत्पन्न जमा' : 'खर्च मागणी'}</span>`,
+                html: `
+                    <div class="text-left space-y-3">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500">तारीख</label>
+                            <input id="swal-date" type="date" class="w-full border p-2 rounded" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500">रक्कम (₹)</label>
+                            <input id="swal-amount" type="number" class="w-full border p-2 rounded" placeholder="00">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500">शीर्षक/कारण</label>
+                            <input id="swal-title" type="text" class="w-full border p-2 rounded" placeholder="उदा. मजुरी / ऊस बिल">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500">वर्गवारी (Category)</label>
+                            <select id="swal-cat" class="w-full border p-2 rounded">
+                                ${isInc ? 
+                                    '<option>पीक विक्री</option><option>इतर</option>' : 
+                                    '<option>मजूर (Labour)</option><option>खते/बियाणे</option><option>यंत्र/डिझेल</option><option>इतर</option>'}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500">नोट्स (Optional)</label>
+                            <textarea id="swal-notes" class="w-full border p-2 rounded" rows="2"></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonColor: color,
+                confirmButtonText: 'सबमिट करा',
+                cancelButtonText: 'रद्द',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const amt = document.getElementById('swal-amount').value;
+                    const title = document.getElementById('swal-title').value;
+                    if (!amt || !title) { Swal.showValidationMessage('कृपया रक्कम आणि शीर्षक टाका'); }
+                    return {
+                        date: document.getElementById('swal-date').value,
+                        amount: amt,
+                        title: title,
+                        category: document.getElementById('swal-cat').value,
+                        notes: document.getElementById('swal-notes').value
+                    };
+                }
+            });
+
+            if (formValues) {
+                // Submit Data
+                const params = new URLSearchParams();
+                params.append('action', 'add');
+                params.append('type', type);
+                params.append('user', currentState.user.role); // Saving role as user ID simplified
+                for (const key in formValues) params.append(key, formValues[key]);
+                
+                sendData(params, "यशस्वी!", "नोंद झाली आहे.");
+            }
+        }
+
+        // 2. APPROVE / VERIFY POPUP
+        async function processAction(id, newStatus, currentAmt, isEditAllowed) {
             let amount = currentAmt;
             let note = "";
 
-            // Accountant Logic
-            if(currentUser.role === 'accountant' && newStatus === 'Verified') {
-                amount = prompt("मंजूर रक्कम (कमी/जास्त करा):", currentAmt);
-                if(amount === null) return;
-                note = prompt("काही बदल केला असल्यास कारण लिहा (Optional):", "");
-            }
-
-            // Owner Logic
-            if(currentUser.role === 'owner' && newStatus === 'Approved') {
-                if(!confirm("हा खर्च मंजूर करायचा का? रक्कम: ₹" + currentAmt)) return;
+            if (isEditAllowed) {
+                // Accountant Flow
+                const { value: formValues } = await Swal.fire({
+                    title: 'तपासणी (Verify)',
+                    html: `
+                        <label class="block text-left text-xs mb-1">मंजूर रक्कम (Confirm Amount)</label>
+                        <input id="verify-amt" type="number" class="swal2-input m-0 w-full mb-3" value="${currentAmt}">
+                        <label class="block text-left text-xs mb-1">बदल केल्यास कारण (Note)</label>
+                        <input id="verify-note" type="text" class="swal2-input m-0 w-full" placeholder="Optional">
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Verify & Submit',
+                    preConfirm: () => {
+                        return [document.getElementById('verify-amt').value, document.getElementById('verify-note').value];
+                    }
+                });
+                if(formValues) {
+                    amount = formValues[0];
+                    note = formValues[1];
+                } else return;
+            } else {
+                // Owner Flow
+                const result = await Swal.fire({
+                    title: newStatus === 'Approved' ? 'मंजूर करायचे का?' : 'नाकारायचे का?',
+                    text: `रक्कम: ₹${currentAmt}`,
+                    icon: newStatus === 'Approved' ? 'question' : 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: newStatus === 'Approved' ? '#22c55e' : '#ef4444',
+                    confirmButtonText: 'होय, पुढे चला'
+                });
+                if(!result.isConfirmed) return;
             }
 
             const params = new URLSearchParams();
@@ -256,76 +633,28 @@
             params.append('id', id);
             params.append('status', newStatus);
             params.append('amount', amount);
-            params.append('notes', note || "");
+            params.append('notes', note);
 
+            sendData(params, "Updated!", "Status बदलले आहे.");
+        }
+
+        function sendData(params, successTitle, successMsg) {
+            Swal.fire({ title: 'प्रोसेसिंग...', didOpen: () => Swal.showLoading() });
+            
             fetch(SCRIPT_URL, { method: 'POST', body: params })
-                .then(() => { alert("Updated!"); fetchData(); });
+                .then(r => r.json())
+                .then(d => {
+                    if(d.result === 'success' || d.result === 'updated') {
+                        Swal.fire({ icon: 'success', title: successTitle, text: successMsg, timer: 2000, showConfirmButton: false });
+                        fetchData();
+                        if(params.get('action') === 'add') switchTab('transactions');
+                    } else {
+                        throw new Error(d.error || 'Unknown Error');
+                    }
+                })
+                .catch(e => Swal.fire('Error', 'काहीतरी चूक झाली: ' + e.message, 'error'));
         }
 
-        function renderTable() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-
-            allData.slice().reverse().forEach(item => {
-                let badgeClass = item.Status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                 (item.Status === 'Verified' ? 'bg-blue-100 text-blue-800' : 
-                                 (item.Status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'));
-                
-                let actions = '-';
-
-                // ACCOUNTANT ACTIONS (Can Verify Pending Expenses)
-                if(currentUser.role === 'accountant' && item.Type === 'Expense' && item.Status === 'Pending') {
-                    actions = `<button onclick="updateStatus('${item.ID}', 'Verified', '${item.Amount}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Verify & Edit</button>`;
-                }
-
-                // OWNER ACTIONS (Can Approve Verified or Pending Expenses)
-                if(currentUser.role === 'owner' && item.Type === 'Expense' && (item.Status === 'Verified' || item.Status === 'Pending')) {
-                    actions = `
-                        <button onclick="updateStatus('${item.ID}', 'Approved', '${item.Amount}')" class="text-green-600 mr-2"><i class="fa-solid fa-check"></i> OK</button>
-                        <button onclick="updateStatus('${item.ID}', 'Rejected', '${item.Amount}')" class="text-red-600"><i class="fa-solid fa-xmark"></i> X</button>
-                    `;
-                }
-
-                const row = `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3">
-                            <div class="text-sm font-medium text-gray-900">${item.Title}</div>
-                            <div class="text-xs text-gray-500">${item.Date} | ${item.User}</div>
-                            <div class="text-xs text-gray-400 italic">${item.Notes}</div>
-                        </td>
-                        <td class="px-4 py-3 text-sm font-bold ${item.Type === 'Income' ? 'text-green-600' : 'text-red-600'}">
-                            ₹${item.Amount}
-                        </td>
-                        <td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded-full ${badgeClass}">${item.Status}</span></td>
-                        <td class="px-4 py-3 text-sm">${actions}</td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-
-        function renderStats() {
-            let inc = 0, exp = 0;
-            allData.forEach(i => {
-                if(i.Status === 'Approved') {
-                    if(i.Type === 'Income') inc += parseFloat(i.Amount);
-                    else exp += parseFloat(i.Amount);
-                }
-            });
-            document.getElementById('d-income').innerText = '₹' + inc;
-            document.getElementById('d-expense').innerText = '₹' + exp;
-            document.getElementById('d-profit').innerText = '₹' + (inc - exp);
-
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['उत्पन्न', 'खर्च'],
-                    datasets: [{ data: [inc, exp], backgroundColor: ['#10b981', '#ef4444'] }]
-                }
-            });
-        }
     </script>
 </body>
 </html>
