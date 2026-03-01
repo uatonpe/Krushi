@@ -2,6 +2,7 @@
     AGRIPARTNER PRO - FIXED VERSION (MARCH 01, 2026)
     Fixes: 'toLowerCase' error regarding Item Title data types.
     Features: Role Based Login, WhatsApp Alerts, Income/Expense Tracking.
+    Update: KPI Cards are now clickable with Date Range Filtering.
 -->
 <!DOCTYPE html>
 <html lang="mr">
@@ -93,7 +94,7 @@
                     लॉग इन करा
                 </button>
             </div>
-            <p class="mt-8 text-[10px] text-slate-400 font-mono">System v3.1 Fixed</p>
+            <p class="mt-8 text-[10px] text-slate-400 font-mono">System v3.2</p>
         </div>
     </div>
 
@@ -171,20 +172,29 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <div class="glass-card p-6">
+                        <div onclick="openKpiDetails('Income')" class="glass-card p-6 cursor-pointer hover:shadow-xl active:scale-95 transition-transform">
                             <p class="text-[11px] font-bold text-slate-400 uppercase">एकूण जमा (Income)</p>
                             <h3 class="text-3xl font-bold text-slate-800 mt-2" id="totalIncome">₹0</h3>
-                            <div class="mt-2 text-xs text-green-600 font-bold"><i class="fa-solid fa-arrow-trend-up"></i> विक्री व इतर</div>
+                            <div class="mt-2 text-xs text-green-600 font-bold flex justify-between">
+                                <span><i class="fa-solid fa-arrow-trend-up"></i> विक्री व इतर</span>
+                                <span class="text-slate-400 font-normal underline">तपशील पहा</span>
+                            </div>
                         </div>
-                        <div class="glass-card p-6">
+                        <div onclick="openKpiDetails('Expense')" class="glass-card p-6 cursor-pointer hover:shadow-xl active:scale-95 transition-transform">
                             <p class="text-[11px] font-bold text-slate-400 uppercase">मंजूर खर्च (Approved)</p>
                             <h3 class="text-3xl font-bold text-slate-800 mt-2" id="totalExpense">₹0</h3>
-                            <div class="mt-2 text-xs text-red-500 font-bold"><i class="fa-solid fa-arrow-trend-down"></i> शेती खर्च</div>
+                            <div class="mt-2 text-xs text-red-500 font-bold flex justify-between">
+                                <span><i class="fa-solid fa-arrow-trend-down"></i> शेती खर्च</span>
+                                <span class="text-slate-400 font-normal underline">तपशील पहा</span>
+                            </div>
                         </div>
-                        <div class="glass-card p-6 bg-gradient-to-br from-brand-600 to-brand-800 text-white">
+                        <div onclick="openKpiDetails('Balance')" class="glass-card p-6 bg-gradient-to-br from-brand-600 to-brand-800 text-white cursor-pointer hover:shadow-xl active:scale-95 transition-transform">
                             <p class="text-[11px] font-bold text-brand-200 uppercase">शिल्लक नफा</p>
                             <h3 class="text-3xl font-bold mt-2" id="netBalance">₹0</h3>
-                            <div class="mt-2 text-xs text-brand-100"><i class="fa-solid fa-wallet"></i> कॅश इन हँड</div>
+                            <div class="mt-2 text-xs text-brand-100 flex justify-between">
+                                <span><i class="fa-solid fa-wallet"></i> कॅश इन हँड</span>
+                                <span class="underline">तपशील पहा</span>
+                            </div>
                         </div>
                     </div>
 
@@ -374,7 +384,6 @@
             let hasRows = false;
 
             currentState.data.forEach(item => {
-                // FIXED: Safe String Conversion to prevent "toLowerCase is not a function" error
                 const titleStr = (item.Title || '').toString().toLowerCase();
                 const userStr = (item.User || '').toString().toLowerCase();
                 const catStr = (item.Category || '').toString().toLowerCase();
@@ -501,6 +510,92 @@
                 showCancelButton: true, confirmButtonColor: '#25D366', confirmButtonText: 'होय, पाठवा', cancelButtonText: 'नको'
             }).then((res) => {
                 if (res.isConfirmed) window.open(`https://wa.me/${RISHIKESH_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
+            });
+        }
+
+        // --- NEW FEATURE: KPI CLICKABLE DETAILS ---
+        async function openKpiDetails(type) {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            const today = now.toISOString().split('T')[0];
+
+            const generateList = (start, end) => {
+                let html = '<div class="space-y-2 max-h-60 overflow-y-auto text-left">';
+                let sum = 0;
+                let hasData = false;
+
+                currentState.data.filter(item => {
+                    const itemDate = item.Date.split('T')[0];
+                    const isDateInRange = itemDate >= start && itemDate <= end;
+                    const isTypeMatch = type === 'Balance' ? true : item.Type === type;
+                    return isDateInRange && isTypeMatch && item.Status === 'Approved';
+                }).forEach(item => {
+                    hasData = true;
+                    const amt = parseFloat(item.Amount);
+                    if(item.Type === 'Income') sum += amt; else sum -= amt;
+                    
+                    const color = item.Type === 'Income' ? 'text-green-600' : 'text-red-600';
+                    html += `<div class="flex justify-between border-b border-slate-100 pb-2 text-xs">
+                                <div>
+                                    <div class="font-bold text-slate-700">${formatDate(item.Date)}</div>
+                                    <div class="text-slate-500">${item.Title}</div>
+                                </div>
+                                <span class="${color} font-bold">${item.Type === 'Income' ? '+' : '-'}₹${amt.toLocaleString('en-IN')}</span>
+                             </div>`;
+                });
+                
+                if(!hasData) html += '<p class="text-center text-slate-400 py-4 text-sm">या कालावधीत माहिती नाही.</p>';
+                html += '</div>';
+
+                let displaySum = sum;
+                if (type === 'Expense') displaySum = Math.abs(sum);
+
+                return { html, total: displaySum };
+            };
+
+            await Swal.fire({
+                title: `${type === 'Balance' ? 'नफा/तोटा' : (type === 'Income' ? 'जमा' : 'खर्च')} तपशील`,
+                html: `
+                    <div class="flex gap-2 mb-4">
+                        <div class="w-1/2 text-left">
+                            <label class="text-[10px] text-slate-500 font-bold uppercase">पासून</label>
+                            <input id="kpi-start" type="date" class="w-full p-2 border border-slate-200 rounded text-sm" value="${firstDay}">
+                        </div>
+                        <div class="w-1/2 text-left">
+                            <label class="text-[10px] text-slate-500 font-bold uppercase">पर्यंत</label>
+                            <input id="kpi-end" type="date" class="w-full p-2 border border-slate-200 rounded text-sm" value="${today}">
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded mb-4 flex justify-between items-center border border-slate-100">
+                        <span class="text-xs font-bold text-slate-500 uppercase">निवडलेली एकूण</span>
+                        <span id="kpi-total" class="text-xl font-bold ml-2">...</span>
+                    </div>
+                    <div id="kpi-list-container"></div>
+                `,
+                didOpen: () => {
+                    const s = document.getElementById('kpi-start');
+                    const e = document.getElementById('kpi-end');
+                    const list = document.getElementById('kpi-list-container');
+                    const tot = document.getElementById('kpi-total');
+
+                    const update = () => {
+                        const data = generateList(s.value, e.value);
+                        list.innerHTML = data.html;
+                        tot.innerText = '₹' + data.total.toLocaleString('en-IN');
+                        if(type === 'Balance') {
+                            tot.className = `text-xl font-bold ml-2 ${data.total >= 0 ? 'text-green-600' : 'text-red-600'}`;
+                        } else {
+                             tot.className = `text-xl font-bold ml-2 ${type === 'Income' ? 'text-green-600' : 'text-red-600'}`;
+                        }
+                    };
+
+                    s.onchange = update;
+                    e.onchange = update;
+                    update();
+                },
+                confirmButtonColor: '#166534',
+                confirmButtonText: 'बंद करा',
+                customClass: { popup: 'rounded-xl' }
             });
         }
     </script>
